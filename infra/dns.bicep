@@ -6,7 +6,7 @@
 //
 // The FQDNs + verification id come from the Container Apps that `azd up` deployed — scripts/deploy-azure.ps1
 // reads them and passes them in. Deploy at the SUBSCRIPTION/RESOURCE-GROUP scope:
-//   az deployment group create -g <rg> -f infra/dns.bicep -p @infra/dns.parameters.json
+//   az deployment group create -g <rg> -f infra/dns.bicep -p zoneName=<zone> hostLabel=hunt searchFqdn=<search app fqdn> artifactsFqdn=<artifacts app fqdn> artifactsCustomDomainVerificationId=<verification id>
 
 targetScope = 'resourceGroup'
 
@@ -24,6 +24,9 @@ param artifactsFqdn string
 
 @description('customDomainVerificationId of the Ard.Artifacts Container App (az containerapp show --query properties.customDomainVerificationId).')
 param artifactsCustomDomainVerificationId string
+
+@description('Static IP of the Container Apps environment (az containerapp env show --query properties.staticIp). Required only for apex hunts (hostLabel "@").')
+param envStaticIp string = ''
 
 var isApex = hostLabel == '@'
 var huntFqdn = isApex ? zoneName : '${hostLabel}.${zoneName}'
@@ -86,6 +89,19 @@ resource artifactsCname 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = if (!isA
     CNAMERecord: {
       cname: artifactsFqdn
     }
+  }
+}
+
+// Apex hunts can't CNAME the zone root — bind via an A record to the Container Apps environment static IP.
+// (Pass -envStaticIp from `az containerapp env show --query properties.staticIp`; required when hostLabel is "@".)
+resource artifactsApexA 'Microsoft.Network/dnsZones/A@2018-05-01' = if (isApex) {
+  parent: zone
+  name: '@'
+  properties: {
+    TTL: 3600
+    ARecords: [
+      { ipv4Address: envStaticIp }
+    ]
   }
 }
 
