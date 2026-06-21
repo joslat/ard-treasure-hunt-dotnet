@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "ardChallengeOne": {
+      "type": "http",
+      "url": "https://ard-281f1ff05c2d4870.azurewebsites.net/mcp"
+    },
+    "ardChallengeTwo": {
+      "type": "http",
+      "url": "https://ard-658cfb3040224efd.azurewebsites.net/mcp"
+    },
+    "ardAwardChallenge": {
+      "type": "http",
+      "url": "https://ard-b0a72356268a4fae.azurewebsites.net/mcp"
+    }
+  }
+}

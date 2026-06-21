@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>Ard.AwardApp</RootNamespace>
+    <AssemblyName>Ard.AwardApp</AssemblyName>
+    <!-- WebView2 ships an unused WPF assembly that references a newer WindowsBase; harmless for a WinForms host. -->
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ard.Core\Ard.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4022.49" />
+  </ItemGroup>
+
+</Project>

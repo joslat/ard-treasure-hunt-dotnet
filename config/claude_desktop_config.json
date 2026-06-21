@@ -1,0 +1,17 @@
+{
+  "_comment": "Claude Desktop has no native remote-HTTP entry, so these wrap the streamable-HTTP servers with the `mcp-remote` stdio bridge (needs Node.js). PREFERRED instead: Settings -> Connectors -> Add custom connector -> paste the https://.../mcp URL (no config file needed). Merge `mcpServers` into %APPDATA%\\Claude\\claude_desktop_config.json (Windows) or ~/Library/Application Support/Claude/claude_desktop_config.json (macOS) and restart Claude Desktop. On Windows you may need \"command\": \"npx.cmd\".",
+  "mcpServers": {
+    "ardChallengeOne": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://ard-281f1ff05c2d4870.azurewebsites.net/mcp"]
+    },
+    "ardChallengeTwo": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://ard-658cfb3040224efd.azurewebsites.net/mcp"]
+    },
+    "ardAwardChallenge": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://ard-b0a72356268a4fae.azurewebsites.net/mcp"]
+    }
+  }
+}

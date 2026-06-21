@@ -1,0 +1,13 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+
+# NuGet
+*.nupkg
+packages/
+
+# Generated run output — keep only the showcase award.png referenced by the README
+/artifacts/run/*
+!/artifacts/run/award.png
