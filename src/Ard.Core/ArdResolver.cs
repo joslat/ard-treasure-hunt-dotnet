@@ -13,11 +13,17 @@ public sealed class ArdResolver
 {
     private readonly HttpClient _http;
     private readonly DnsOverHttps _dns;
+    private readonly string _scheme;
 
-    public ArdResolver(HttpClient http)
+    /// <summary>
+    /// <paramref name="scheme"/> ("https" default, "http" for a local self-hosted hunt) governs the
+    /// well-known URL and the SRV-derived registry base; <paramref name="dohResolvers"/> overrides the DoH providers.
+    /// </summary>
+    public ArdResolver(HttpClient http, string scheme = "https", IEnumerable<string>? dohResolvers = null)
     {
         _http = http;
-        _dns = new DnsOverHttps(http);
+        _dns = new DnsOverHttps(http, dohResolvers);
+        _scheme = scheme;
     }
 
     // --- Mechanism 1: Well-Known URI -------------------------------------------------
@@ -25,7 +31,7 @@ public sealed class ArdResolver
     /// <summary><c>GET https://{domain}/.well-known/ai-catalog.json</c>.</summary>
     public async Task<AiCatalog> ResolveWellKnownAsync(string domain, CancellationToken ct = default)
     {
-        var url = $"https://{domain}/.well-known/ai-catalog.json";
+        var url = $"{_scheme}://{domain}/.well-known/ai-catalog.json";
         return await FetchCatalogAsync(url, ct);
     }
 
@@ -59,7 +65,7 @@ public sealed class ArdResolver
         var name = $"_search._agents.{domain}";
         var srvs = await _dns.ResolveSrvAsync(name, ct);
         var srv = srvs.FirstOrDefault() ?? throw new ArdException($"No SRV record found at {name}.");
-        var registryBase = srv.ToBaseUrl();
+        var registryBase = srv.ToBaseUrl(_scheme);
         var response = await SearchAsync(registryBase, queryText, pageSize, ct);
         return (response, srv, registryBase);
     }

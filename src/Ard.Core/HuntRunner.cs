@@ -16,10 +16,10 @@ public sealed partial class HuntRunner
     private readonly ArdResolver _resolver;
     private readonly Action<string> _log;
 
-    public HuntRunner(HttpClient http, Action<string>? log = null)
+    public HuntRunner(HttpClient http, Action<string>? log = null, string scheme = "https", IEnumerable<string>? dohResolvers = null)
     {
         _http = http;
-        _resolver = new ArdResolver(http);
+        _resolver = new ArdResolver(http, scheme, dohResolvers);
         _log = log ?? (_ => { });
     }
 

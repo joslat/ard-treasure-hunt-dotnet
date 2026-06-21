@@ -9,15 +9,25 @@ namespace Ard.Core;
 /// </summary>
 public sealed class DnsOverHttps
 {
-    private static readonly string[] Resolvers =
+    private static readonly string[] DefaultResolvers =
     {
         "https://dns.google/resolve",
         "https://cloudflare-dns.com/dns-query",
     };
 
     private readonly HttpClient _http;
+    private readonly string[] _resolvers;
 
-    public DnsOverHttps(HttpClient http) => _http = http;
+    /// <summary>
+    /// <paramref name="resolvers"/> overrides the public DoH providers — point a local mock-DoH
+    /// endpoint here for an offline, self-hosted hunt. Defaults to dns.google + Cloudflare.
+    /// </summary>
+    public DnsOverHttps(HttpClient http, IEnumerable<string>? resolvers = null)
+    {
+        _http = http;
+        var list = resolvers?.ToArray();
+        _resolvers = list is { Length: > 0 } ? list : DefaultResolvers;
+    }
 
     private const int TypeTxt = 16;
     private const int TypeSrv = 33;
@@ -55,7 +65,7 @@ public sealed class DnsOverHttps
     private async Task<IReadOnlyList<DohAnswer>> QueryAsync(string name, int type, CancellationToken ct)
     {
         Exception? last = null;
-        foreach (var resolver in Resolvers)
+        foreach (var resolver in _resolvers)
         {
             try
             {

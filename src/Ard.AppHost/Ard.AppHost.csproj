@@ -1,0 +1,21 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.6">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>7e47b6d2-47c7-43bb-933b-3d8c3d72a640</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.NodeJs" Version="9.5.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ard.MockDoH\Ard.MockDoH.csproj" />
+    <ProjectReference Include="..\Ard.Artifacts\Ard.Artifacts.csproj" />
+    <ProjectReference Include="..\Ard.Walker\Ard.Walker.csproj" />
+  </ItemGroup>
+
+</Project>

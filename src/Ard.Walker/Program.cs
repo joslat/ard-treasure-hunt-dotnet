@@ -53,13 +53,18 @@ catch (Exception ex)
 
 async Task WalkAsync()
 {
-    var domain = Option("--domain") ?? DefaultDomain;
+    var domain = Option("--domain") ?? Environment.GetEnvironmentVariable("ARD_SEED_DOMAIN") ?? DefaultDomain;
     var outDir = ResolveOutDir(Option("--out") ?? "ard-output");
     var name = Option("--name") ?? DefaultName;
 
-    Banner($"ARD Treasure Hunt — walking the trail from  {domain}");
+    // Local self-hosted mode (set by the Aspire AppHost): http scheme + a local mock-DoH resolver.
+    var scheme = Environment.GetEnvironmentVariable("ARD_SCHEME") ?? "https";
+    var dohEnv = Environment.GetEnvironmentVariable("ARD_DOH_RESOLVER");
+    var dohResolvers = string.IsNullOrWhiteSpace(dohEnv) ? null : new[] { dohEnv };
 
-    var runner = new HuntRunner(http, Console.WriteLine);
+    Banner($"ARD Treasure Hunt — walking the trail from  {scheme}://{domain}");
+
+    var runner = new HuntRunner(http, Console.WriteLine, scheme, dohResolvers);
     var report = await runner.RunAsync(domain);
 
     // Persist the proof + artifacts.

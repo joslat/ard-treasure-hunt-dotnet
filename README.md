@@ -8,6 +8,7 @@ Starting from a single clue — `https://nullpointer.se/.well-known/ai-catalog.j
 
 - 🧭 **Want to learn it?** → start the [**workshop**](workshop/README.md). Seven labs, build it yourself with an AI agent, understand every line.
 - 🏃 **Want to run it?** → jump to [Quickstart](#quickstart).
+- 🏗️ **Want to host your _own_ hunt?** → [`docs/SELFHOST.md`](docs/SELFHOST.md) — stand up the whole chain locally for free with **.NET Aspire** (`dotnet run` and a dashboard); Azure deploy via `azd` coming next.
 - 📚 **Links & credits** → [`docs/REFERENCES.md`](docs/REFERENCES.md) — the ARD spec, MCP Apps docs, and the original hunt.
 
 > ⚠️ **Spoiler warning.** This repo is a *complete solution and teaching kit*: it contains the three completion codes and the full discovery path (and `artifacts/run/award.png` shows the final code). If you'd rather solve the hunt yourself first, stop here and start from the only clue you're meant to have: `https://nullpointer.se/.well-known/ai-catalog.json`.

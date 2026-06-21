@@ -7,4 +7,9 @@
   <Folder Name="/tests/">
     <Project Path="tests/Ard.Core.Tests/Ard.Core.Tests.csproj" />
   </Folder>
+  <Folder Name="/selfhost/">
+    <Project Path="src/Ard.AppHost/Ard.AppHost.csproj" />
+    <Project Path="src/Ard.Artifacts/Ard.Artifacts.csproj" />
+    <Project Path="src/Ard.MockDoH/Ard.MockDoH.csproj" />
+  </Folder>
 </Solution>
