@@ -133,7 +133,7 @@ public sealed class McpHttpClient
     }
 
     /// <summary>Decode the body as UTF-8 and, if SSE-framed, reassemble the JSON-RPC payload from <c>data:</c> lines.</summary>
-    private static string ExtractJson(string contentType, byte[] bytes)
+    internal static string ExtractJson(string contentType, byte[] bytes)
     {
         var text = Encoding.UTF8.GetString(bytes);
         if (!contentType.Contains("text/event-stream", StringComparison.OrdinalIgnoreCase))

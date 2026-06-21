@@ -78,7 +78,7 @@ public sealed class DnsOverHttps
 
     // TXT data may arrive wrapped in quotes, and long TXT records may be split into
     // multiple quoted chunks ("part1" "part2") that must be concatenated.
-    private static string Unquote(string data)
+    internal static string Unquote(string data)
     {
         data = data.Trim();
         if (!data.Contains('"')) return data;

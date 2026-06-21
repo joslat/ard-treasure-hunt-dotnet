@@ -4,4 +4,7 @@
     <Project Path="src/Ard.Walker/Ard.Walker.csproj" />
     <Project Path="src/Ard.AwardApp/Ard.AwardApp.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Ard.Core.Tests/Ard.Core.Tests.csproj" />
+  </Folder>
 </Solution>

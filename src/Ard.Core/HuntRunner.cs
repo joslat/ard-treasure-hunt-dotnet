@@ -185,7 +185,7 @@ public sealed partial class HuntRunner
         return sb.ToString();
     }
 
-    private static (string? Code, string? Message) GetStructuredCode(JsonElement result)
+    internal static (string? Code, string? Message) GetStructuredCode(JsonElement result)
     {
         if (result.TryGetProperty("structuredContent", out var sc) && sc.ValueKind == JsonValueKind.Object)
         {
@@ -196,7 +196,7 @@ public sealed partial class HuntRunner
         return (null, null);
     }
 
-    private static string? ExtractCodeFromText(string? text)
+    internal static string? ExtractCodeFromText(string? text)
     {
         if (string.IsNullOrEmpty(text)) return null;
         var m = CompletionCodeRegex().Match(text);

@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  windows:
+    name: Build & test (Windows · full toolkit)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Build Ard.Core
+        run: dotnet build src/Ard.Core/Ard.Core.csproj --configuration Release
+      - name: Build Ard.Walker
+        run: dotnet build src/Ard.Walker/Ard.Walker.csproj --configuration Release
+      - name: Build Ard.AwardApp (WinForms + WebView2)
+        run: dotnet build src/Ard.AwardApp/Ard.AwardApp.csproj --configuration Release
+      - name: Test
+        run: dotnet test tests/Ard.Core.Tests/Ard.Core.Tests.csproj --configuration Release
+
+  linux-core:
+    name: Build & test (Linux · cross-platform core)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      # Ard.AwardApp is net9.0-windows (WebView2) and intentionally excluded here —
+      # this job proves Ard.Core + Ard.Walker (Labs 00–04) build and test on Linux.
+      - name: Build Ard.Core
+        run: dotnet build src/Ard.Core/Ard.Core.csproj --configuration Release
+      - name: Build Ard.Walker
+        run: dotnet build src/Ard.Walker/Ard.Walker.csproj --configuration Release
+      - name: Test
+        run: dotnet test tests/Ard.Core.Tests/Ard.Core.Tests.csproj --configuration Release

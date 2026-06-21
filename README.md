@@ -1,5 +1,7 @@
 # ARD Treasure Hunt — .NET Toolkit & Workshop
 
+[![CI](https://github.com/joslat/ard-treasure-hunt-dotnet/actions/workflows/ci.yml/badge.svg)](https://github.com/joslat/ard-treasure-hunt-dotnet/actions/workflows/ci.yml)
+
 A **.NET 9 / C#** toolkit that solves [Andreas Adner](https://nullpointer.se/)'s [Agentic Resource Discovery (ARD)](https://agenticresourcediscovery.org/) treasure hunt end-to-end — and a **hands-on workshop** that teaches you to build it yourself, step by step.
 
 Starting from a single clue — `https://nullpointer.se/.well-known/ai-catalog.json` — the toolkit walks all three ARD discovery mechanisms, connects to each hidden MCP server, collects the completion codes, and renders the final **MCP Apps** trophy as a PNG.
@@ -124,6 +126,18 @@ The capstone. It renders challenge 3 as a **real MCP App** and captures it. This
 - **.NET 9 SDK** (or newer — built/tested with the .NET 10 SDK).
 - **WebView2 Runtime** (pre-installed on Windows 11) — only needed for `Ard.AwardApp`.
 - Internet access — the challenge servers are live on Azure. DNS-over-HTTPS is used, so no `dig` required.
+
+---
+
+## Tests
+
+`Ard.Core`'s pure protocol logic is covered by an offline **xUnit** suite (`tests/Ard.Core.Tests`, no network):
+
+```powershell
+dotnet test
+```
+
+It locks down the fiddly parts: **SSE event-boundary reassembly**, TXT unquoting (incl. multi-chunk records), `SRV → base-URL` derivation, the completion-code regex + `structuredContent` parsing, `McpConfig` (both `servers`/`mcpServers` schemas), and the camelCase/PascalCase JSON round-trips. CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) builds + tests on **Windows** (full toolkit) and **Linux** (the cross-platform core) on every push and PR.
 
 ---
 
