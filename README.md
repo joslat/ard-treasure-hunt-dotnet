@@ -1,6 +1,6 @@
 # ARD Treasure Hunt — .NET Toolkit & Workshop
 
-A **.NET 9 / C#** toolkit that solves Andreas Adner's [Agentic Resource Discovery (ARD)](https://agenticresourcediscovery.org/) treasure hunt end-to-end — and a **hands-on workshop** that teaches you to build it yourself, step by step.
+A **.NET 9 / C#** toolkit that solves [Andreas Adner](https://nullpointer.se/)'s [Agentic Resource Discovery (ARD)](https://agenticresourcediscovery.org/) treasure hunt end-to-end — and a **hands-on workshop** that teaches you to build it yourself, step by step.
 
 Starting from a single clue — `https://nullpointer.se/.well-known/ai-catalog.json` — the toolkit walks all three ARD discovery mechanisms, connects to each hidden MCP server, collects the completion codes, and renders the final **MCP Apps** trophy as a PNG.
 
