@@ -32,7 +32,7 @@ So discovery is a **two-hop fetch**: catalog → card → endpoint.
 
 ### Step B — MCP over streamable-HTTP (the wire protocol)
 
-You POST JSON-RPC 2.0 messages to the endpoint. The sequence:
+You POST JSON-RPC 2.0 messages to the endpoint. In JSON-RPC, a message with an `id` is a **request** (it expects a reply); a message with no `id` is a **notification** (fire-and-forget) — that's why `notifications/initialized` below carries no id. The sequence:
 
 | # | Method | id? | Purpose |
 |---|--------|-----|---------|
@@ -55,11 +55,12 @@ An `initialize` request body looks like:
 2. Responses come back as **Server-Sent Events**: a line `event: message` then a line `data: {…json-rpc…}`. You must strip the `data:` prefix and parse the rest.
 3. These servers are **stateless** — they don't issue an `Mcp-Session-Id`. Don't block waiting for one.
 
-A raw response looks like:
+A raw response looks like this — an `event:` line you ignore, and a `data:` line whose 5-char prefix you strip before parsing the rest as JSON-RPC:
 
 ```
-event: message
+event: message                              ← SSE line: ignore
 data: {"result":{"content":[{"type":"text","text":"…Completion code: \"Rip and tear!\"…"}]},"jsonrpc":"2.0","id":99}
+└──┬─┘ strip this prefix, then JsonDocument.Parse the rest
 ```
 
 ---
@@ -72,7 +73,7 @@ You'll write two things in `Ard.Core`: an **MCP client** and a tiny **ARD resolv
 > *"In `Ard.Core`, add `McpHttpClient` taking an `HttpClient` and an endpoint URL. Implement streamable-HTTP MCP (JSON-RPC 2.0): methods `InitializeAsync`, `ListToolsAsync`, `CallToolAsync(name, args)`. For every POST set `Accept: application/json, text/event-stream`. Read the response as raw bytes and decode UTF-8. If the content-type is `text/event-stream`, reassemble the JSON from the `data:` lines, then `JsonDocument.Parse`. Use an incrementing id; send `notifications/initialized` (no id) after initialize. Don't require an `Mcp-Session-Id`. Return the `result` element; throw on a JSON-RPC `error`."*
 
 > 💬 **Prompt 2 — well-known discovery.**
-> *"In `Ard.Core`, add `ArdResolver(HttpClient)` with `ResolveWellKnownAsync(domain)` that GETs `https://{domain}/.well-known/ai-catalog.json` and deserializes it, and `FetchCardAsync(url)` that GETs an MCP card. Add small DTOs (`AiCatalog`, `CatalogEntry`, `McpServerCard`, `McpEndpoint`). Use case-insensitive, camelCase JSON options."*
+> *"In `Ard.Core`, add `ArdResolver(HttpClient)` with a shared `FetchCatalogAsync(url)` that GETs and deserializes an `ai-catalog.json`, a `ResolveWellKnownAsync(domain)` that builds `https://{domain}/.well-known/ai-catalog.json` and calls `FetchCatalogAsync`, and a `FetchCardAsync(url)` that GETs an MCP card. Add small DTOs (`AiCatalog`, `CatalogEntry`, `McpServerCard`, `McpEndpoint`). Use case-insensitive, camelCase JSON options."*
 
 > 💬 **Prompt 3 — wire it up in the walker.**
 > *"In `Ard.Walker`, resolve the well-known catalog for `nullpointer.se`, fetch the first entry's card, connect with `McpHttpClient`, run initialize + tools/list, call the first tool, and print the result text."*
@@ -141,7 +142,7 @@ You'll see the `event: message` / `data:` framing with your own eyes.
 ## 📂 Reference
 
 - [`src/Ard.Core/McpHttpClient.cs`](../src/Ard.Core/McpHttpClient.cs) — note the `ExtractJson` SSE reassembly and the dual-`Accept` headers.
-- [`src/Ard.Core/ArdResolver.cs`](../src/Ard.Core/ArdResolver.cs) — `ResolveWellKnownAsync`, `FetchCardAsync`.
+- [`src/Ard.Core/ArdResolver.cs`](../src/Ard.Core/ArdResolver.cs) — `FetchCatalogAsync`, `ResolveWellKnownAsync`, `FetchCardAsync`.
 - [`src/Ard.Core/Models.cs`](../src/Ard.Core/Models.cs) · [`src/Ard.Core/Json.cs`](../src/Ard.Core/Json.cs)
 
 ➡️ **Next: [Lab 02 — Discovery via DNS](02-dns-txt.md)** — follow the "DNS" hint.

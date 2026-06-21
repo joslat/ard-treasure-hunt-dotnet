@@ -11,6 +11,7 @@ public static partial class AwardSource
         // 1. Explicit local file (offline / render the walker's saved award.html).
         if (o.HtmlPath is not null)
         {
+            if (!File.Exists(o.HtmlPath)) throw new ArdException($"Award HTML not found: {o.HtmlPath}");
             log($"Loading local award HTML: {o.HtmlPath}");
             return FromHtmlFile(o.HtmlPath);
         }
@@ -27,8 +28,8 @@ public static partial class AwardSource
                 log("Walking the entire ARD trail to discover the award…");
                 var report = await runner.RunAsync(o.Domain, ct);
                 var c3 = report.Challenges.First(c => c.AwardHtml is not null);
-                return new AwardArtifact(c3.Code ?? "1337 h4x0r",
-                    c3.Message ?? DefaultMessage, c3.AwardHtml!, c3.AwardUri ?? "ui://challenge-three/award.html", c3.Endpoint ?? "");
+                return new AwardArtifact(c3.Code ?? AwardDefaults.Code,
+                    c3.Message ?? DefaultMessage, c3.AwardHtml!, c3.AwardUri ?? AwardDefaults.AwardUri, c3.Endpoint ?? "");
             }
 
             var endpoint = o.Endpoint;
@@ -59,13 +60,13 @@ public static partial class AwardSource
         }
     }
 
-    private const string DefaultMessage = "Congrats, you solved the Agentic Resource Discovery (ARD) challenge!";
+    private const string DefaultMessage = AwardDefaults.Message;
 
     private static AwardArtifact FromHtmlFile(string path)
     {
         var html = File.ReadAllText(path);
-        var code = CompletionCodeAttr().Match(html) is { Success: true } m ? m.Groups[1].Value : "1337 h4x0r";
-        return new AwardArtifact(code, DefaultMessage, html, "ui://challenge-three/award.html", $"(local file) {path}");
+        var code = CompletionCodeAttr().Match(html) is { Success: true } m ? m.Groups[1].Value : AwardDefaults.Code;
+        return new AwardArtifact(code, DefaultMessage, html, AwardDefaults.AwardUri, $"(local file) {path}");
     }
 
     /// <summary>Walk up from the app's base directory to find <c>artifacts/(run|captured)/award.html</c>.</summary>

@@ -86,7 +86,9 @@ public sealed class McpHttpClient
         var root = doc.RootElement;
         if (root.TryGetProperty("error", out var error))
         {
-            var code = error.TryGetProperty("code", out var c) ? c.GetRawText() : "?";
+            var code = error.TryGetProperty("code", out var c)
+                ? (c.ValueKind == JsonValueKind.Number ? c.GetRawText() : c.ToString())
+                : "?";
             var msg = error.TryGetProperty("message", out var m) ? m.GetString() : "(no message)";
             throw new ArdException($"MCP '{method}' error {code}: {msg}");
         }
@@ -137,23 +139,36 @@ public sealed class McpHttpClient
         if (!contentType.Contains("text/event-stream", StringComparison.OrdinalIgnoreCase))
             return text;
 
-        // Collect data: lines. Per SSE, multiple data lines in one event join with '\n'.
-        var dataLines = new List<string>();
+        // Reassemble per SSE: a blank line ends an event; within an event, multiple
+        // data: lines join with '\n'. Build one joined-data string per event so we never
+        // splice together separate events (which would yield invalid JSON).
+        var events = new List<string>();
+        var current = new List<string>();
         foreach (var rawLine in text.Split('\n'))
         {
             var line = rawLine.TrimEnd('\r');
+            if (line.Length == 0)
+            {
+                if (current.Count > 0) { events.Add(string.Join("\n", current)); current.Clear(); }
+                continue;
+            }
             if (line.StartsWith("data:", StringComparison.Ordinal))
             {
                 var d = line.Substring(5);
                 if (d.StartsWith(" ", StringComparison.Ordinal)) d = d.Substring(1);
-                dataLines.Add(d);
+                current.Add(d);
             }
         }
-        if (dataLines.Count == 0) return text;
+        if (current.Count > 0) events.Add(string.Join("\n", current));
+        if (events.Count == 0) return text;
 
-        var joined = string.Join("\n", dataLines);
-        // Single-event responses parse directly; if multiple events were concatenated, fall back to the last one.
-        try { using var _ = JsonDocument.Parse(joined); return joined; }
-        catch (JsonException) { return dataLines[^1]; }
+        // The JSON-RPC response is the last event that parses as JSON; iterate newest-first
+        // so the final message wins, and fall back to the last event if none parse.
+        for (var i = events.Count - 1; i >= 0; i--)
+        {
+            try { using var _ = JsonDocument.Parse(events[i]); return events[i]; }
+            catch (JsonException) { }
+        }
+        return events[^1];
     }
 }

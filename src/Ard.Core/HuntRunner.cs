@@ -90,7 +90,7 @@ public sealed partial class HuntRunner
 
         var mcp = new McpHttpClient(_http, endpoint);
         await mcp.InitializeAsync(ct: ct);
-        await mcp.ListToolsAsync(ct);
+        await mcp.ListToolsAsync(ct); // tools/list for protocol faithfulness; the tool name already came from the card
         var result = await mcp.CallToolAsync(toolName, ct: ct);
 
         r.ResultText = GetResultText(result);
@@ -101,7 +101,7 @@ public sealed partial class HuntRunner
 
         // Read the MCP App award component.
         var resources = await mcp.ListResourcesAsync(ct);
-        var uri = FindUiResourceUri(resources) ?? "ui://challenge-three/award.html";
+        var uri = FindUiResourceUri(resources) ?? AwardDefaults.AwardUri;
         r.AwardUri = uri;
         Step(r, $"resources/read {uri}");
         r.AwardHtml = await mcp.ReadResourceTextAsync(uri, ct);
@@ -123,11 +123,11 @@ public sealed partial class HuntRunner
 
         var result = await mcp.CallToolAsync(toolName, ct: ct);
         var (code, message) = GetStructuredCode(result);
-        code ??= ExtractCodeFromText(GetResultText(result)) ?? "1337 h4x0r";
-        message ??= "Congrats, you solved the Agentic Resource Discovery (ARD) challenge!";
+        code ??= ExtractCodeFromText(GetResultText(result)) ?? AwardDefaults.Code;
+        message ??= AwardDefaults.Message;
 
         var resources = await mcp.ListResourcesAsync(ct);
-        var uri = FindUiResourceUri(resources) ?? "ui://challenge-three/award.html";
+        var uri = FindUiResourceUri(resources) ?? AwardDefaults.AwardUri;
         var html = await mcp.ReadResourceTextAsync(uri, ct);
 
         return new AwardArtifact(code, message, html, uri, endpoint);
@@ -147,7 +147,7 @@ public sealed partial class HuntRunner
 
         var mcp = new McpHttpClient(_http, endpoint);
         await mcp.InitializeAsync(ct: ct);
-        await mcp.ListToolsAsync(ct);
+        await mcp.ListToolsAsync(ct); // tools/list for protocol faithfulness; the tool name already came from the card
         var result = await mcp.CallToolAsync(toolName, ct: ct);
 
         r.ResultText = GetResultText(result);
@@ -189,8 +189,8 @@ public sealed partial class HuntRunner
     {
         if (result.TryGetProperty("structuredContent", out var sc) && sc.ValueKind == JsonValueKind.Object)
         {
-            var code = sc.TryGetProperty("code", out var c) ? c.GetString() : null;
-            var msg = sc.TryGetProperty("message", out var m) ? m.GetString() : null;
+            var code = sc.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.String ? c.GetString() : null;
+            var msg = sc.TryGetProperty("message", out var m) && m.ValueKind == JsonValueKind.String ? m.GetString() : null;
             return (code, msg);
         }
         return (null, null);

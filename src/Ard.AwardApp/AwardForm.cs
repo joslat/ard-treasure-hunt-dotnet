@@ -52,7 +52,6 @@ public sealed class AwardForm : Form
         }
 
         Load += async (_, _) => await RunAsync();
-        FormClosed += (_, _) => CleanupTemp();
     }
 
     private Panel BuildToolbar()
@@ -239,6 +238,23 @@ public sealed class AwardForm : Form
 
     private static string SafeFileName(string s) =>
         string.Concat(s.Split(Path.GetInvalidFileNameChars())).Replace(' ', '-');
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            // The msedgewebview2 browser process holds a lock on the user-data dir and exits
+            // asynchronously, so grab its PID, start the shutdown, then wait for it to actually
+            // exit before deleting — otherwise the delete races the lock and the temp dir leaks.
+            int? browserPid = null;
+            try { browserPid = (int?)_web.CoreWebView2?.BrowserProcessId; } catch { }
+            _web.Dispose();
+            if (browserPid is int pid)
+                try { using var p = System.Diagnostics.Process.GetProcessById(pid); p.WaitForExit(3000); } catch { }
+            CleanupTemp();
+        }
+        base.Dispose(disposing);
+    }
 
     private void CleanupTemp()
     {

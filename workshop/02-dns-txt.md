@@ -13,7 +13,7 @@ You already have the MCP client from Lab 01. This lab only adds a new **discover
 Instead of hosting a file at a well-known path, a publisher can publish a **DNS record**. ARD uses Service-Binding–style names under `_agents`:
 
 - `_catalog._agents.{domain}` **TXT** → points at a static `ai-catalog.json` (this lab)
-- `_search._agents.{domain}` **SRV** → points at a registry (Lab 03)
+- `_search._agents.{domain}` **SRV** → points at a registry (Lab 03). You'll build `ResolveSrvAsync` now (same DoH call, just type 33) so Lab 03 can reuse it; its `priority weight port target` fields and base-URL derivation are explained there.
 
 The TXT record carries a `url=` value:
 

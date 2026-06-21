@@ -32,7 +32,7 @@ So the same `tools/call` you already do returns **both** a text fallback *and* `
                          "message":"Congrats, you solved the Agentic Resource Discovery (ARD) challenge!" } }
 ```
 
-A non-Apps client shows the text. An Apps-capable host renders the trophy. **Progressive enhancement.**
+A non-Apps client shows the text. An Apps-capable host renders the trophy. **Progressive enhancement** — one response degrades gracefully: a plain client uses the text, a rich host uses the structured data + UI, and neither needs a separate tool.
 
 ### Reading the UI resource
 
@@ -40,7 +40,7 @@ Two more MCP methods (same client, same transport):
 
 ```
 resources/list  → [ { uri: "ui://challenge-three/award.html", mimeType: "text/html;profile=mcp-app" } ]
-resources/read  { uri }  → contents[0].text  ← the full self-contained HTML SPA (~325 KB)
+resources/read  { uri }  → contents[0].text  ← the full self-contained HTML SPA (~344 KB)
 ```
 
 The HTML has the trophy, headline, and the code **server-rendered into the markup** (`value="1337 h4x0r"`). The theme and the greeting come later, from the host (Lab 05).
@@ -53,7 +53,7 @@ The HTML has the trophy, headline, and the code **server-rendered into the marku
 > *"Extend `McpHttpClient` with `ListResourcesAsync()` (`resources/list`) and `ReadResourceTextAsync(uri)` (`resources/read`) that returns `contents[0].text`. Same SSE + UTF-8 handling as the other calls."*
 
 > 💬 **Prompt 2 — read structured output + the award.**
-> *"After calling `reveal_challenge_three`, read `structuredContent.code` and `.message`. Then `resources/list`, find the resource whose uri starts with `ui://`, `resources/read` it, and save the HTML to `artifacts/run/award.html` as UTF-8 (no BOM)."*
+> *"After calling `reveal_challenge_three`, read `structuredContent.code` and `.message`. Then `resources/list`, find the resource whose uri starts with `ui://`, `resources/read` it, and save the HTML to `ard-output/award.html` as UTF-8 (no BOM)."*
 
 ---
 
@@ -87,7 +87,7 @@ Open `award.html` in a browser — you'll see the trophy and code, but **un-them
 ## ⚠️ Gotchas
 
 - **Mojibake on the trophy 🏆 / em-dashes** — the classic UTF-8 trap. The SSE body is UTF-8; if you saved it via a default-encoding string you'll get `Ã°Å¸ÂÆ' ` garbage. Read **bytes**, decode **UTF-8**, write with `UTF8Encoding(false)`.
-- **Huge payload** — the resource is ~325 KB in a single SSE `data:` line. Your reassembly must handle one very long line (don't truncate).
+- **Huge payload** — the resource is ~344 KB in a single SSE `data:` line. Your reassembly must handle one very long line (don't truncate).
 - **Hard-coding the uri** — read it from `resources/list` rather than assuming `ui://challenge-three/award.html`.
 
 ---
@@ -96,7 +96,7 @@ Open `award.html` in a browser — you'll see the trophy and code, but **un-them
 
 1. The tool returns *both* text and `structuredContent`. How does this single design let it serve a dumb terminal **and** a rich host without two different tools?
 2. The completion code is baked into the HTML *and* available in `structuredContent`. Why might a server send it both ways?
-3. `resources/read` returns a fully self-contained SPA (no external scripts). Why is "self-contained" important for something a host will run in a **sandbox** (Lab 05)?
+3. `resources/read` returns a fully self-contained SPA (no external scripts). Why is "self-contained" important for something a host will run in a **sandbox** — an isolated iframe with no access to the host page, covered in Lab 05?
 
 ---
 
