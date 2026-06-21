@@ -15,10 +15,14 @@ public class McpConfigTests
     [Fact]
     public void Load_ReadsServersSchema_VsCodeStyle()
     {
+        // Arrange
         var path = WriteTemp("{\"servers\":{\"one\":{\"type\":\"http\",\"url\":\"https://x/mcp\"}}}");
         try
         {
+            // Act
             var servers = McpConfig.Load(path);
+
+            // Assert
             Assert.True(servers.ContainsKey("one"));
             Assert.True(servers["one"].IsHttp);
             Assert.Equal("https://x/mcp", servers["one"].Url);
@@ -29,10 +33,14 @@ public class McpConfigTests
     [Fact]
     public void Load_ReadsMcpServersSchema_ClaudeStyle()
     {
+        // Arrange
         var path = WriteTemp("{\"mcpServers\":{\"two\":{\"type\":\"http\",\"url\":\"https://y/mcp\"}}}");
         try
         {
+            // Act
             var servers = McpConfig.Load(path);
+
+            // Assert
             Assert.True(servers.ContainsKey("two"));
             Assert.Equal("https://y/mcp", servers["two"].Url);
         }
@@ -42,10 +50,14 @@ public class McpConfigTests
     [Fact]
     public void Load_StdioBridge_IsNotHttp()
     {
+        // Arrange
         var path = WriteTemp("{\"mcpServers\":{\"bridge\":{\"command\":\"npx\",\"args\":[\"-y\",\"mcp-remote\",\"https://z/mcp\"]}}}");
         try
         {
+            // Act
             var s = McpConfig.Load(path)["bridge"];
+
+            // Assert
             Assert.False(s.IsHttp);
             Assert.Equal("npx", s.Command);
             Assert.Contains("mcp-remote", s.Args!);
@@ -56,7 +68,10 @@ public class McpConfigTests
     [Fact]
     public void Load_ReturnsEmpty_WhenNeitherKeyPresent()
     {
+        // Arrange
         var path = WriteTemp("{\"somethingElse\":{}}");
+
+        // Act + Assert
         try { Assert.Empty(McpConfig.Load(path)); }
         finally { File.Delete(path); }
     }
