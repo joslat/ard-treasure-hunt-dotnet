@@ -21,24 +21,28 @@ var c1 = builder.AddNpmApp("challenge1-mcp", "../../servers/challenge1-mcp")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()
+    .WithEnvironment("NODE_ENV", builder.ExecutionContext.IsPublishMode ? "production" : "development")
     .PublishAsDockerFile();
 
 var c2 = builder.AddNpmApp("challenge2-mcp", "../../servers/challenge2-mcp")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()
+    .WithEnvironment("NODE_ENV", builder.ExecutionContext.IsPublishMode ? "production" : "development")
     .PublishAsDockerFile();
 
 var c3 = builder.AddNpmApp("challenge3-mcp", "../../servers/challenge3-mcp")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()
+    .WithEnvironment("NODE_ENV", builder.ExecutionContext.IsPublishMode ? "production" : "development")
     .PublishAsDockerFile();
 
 var search = builder.AddNpmApp("challenge3-search", "../../servers/challenge3-search")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()
+    .WithEnvironment("NODE_ENV", builder.ExecutionContext.IsPublishMode ? "production" : "development")
     .PublishAsDockerFile();
 
 // --- glue: the well-known catalog + MCP cards, generated from the resolved MCP endpoints ---

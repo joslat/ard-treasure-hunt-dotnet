@@ -2,7 +2,8 @@
 // the challenge-2 manifest, and the three MCP server cards. Every absolute URL is generated from the
 // endpoints the AppHost resolved at runtime (the MCP server bases come in as env vars; the card URLs
 // are built from the incoming request), so there are no hard-coded ports. In Azure these same files
-// are served by a Static Web App instead.
+// are served by THIS service running as a container app, with your custom domain bound to it
+// (see src/Ard.AppHost/AppHost.cs and docs/SELFHOST.md).
 //
 // Config (injected by the AppHost): C1_BASE, C2_BASE, C3_BASE (the three MCP server base URLs).
 
@@ -11,9 +12,10 @@ using Microsoft.AspNetCore.HttpOverrides;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-// Behind Azure Container Apps ingress (TLS terminated at the proxy), honor X-Forwarded-Proto/Host so the
-// generated card/catalog URLs come out https://{custom domain} rather than http://. Harmless locally.
-var fwd = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost };
+// Behind Azure Container Apps ingress (TLS terminated at the proxy), honor X-Forwarded-Proto so the scheme
+// reads https rather than http. ACA does not send X-Forwarded-Host — it passes the original client Host
+// header through unmodified, so Request.Host already equals the bound custom domain. Harmless locally.
+var fwd = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedProto };
 fwd.KnownNetworks.Clear();
 fwd.KnownProxies.Clear();
 app.UseForwardedHeaders(fwd);
@@ -33,7 +35,7 @@ static string Self(HttpRequest r) => $"{r.Scheme}://{r.Host}";
 app.MapGet("/.well-known/ai-catalog.json", (HttpRequest r) => Results.Json(new
 {
     specVersion = "1.0",
-    host = new { displayName = "Self-hosted ARD Treasure Hunt", identifier = "did:web:localhost" },
+    host = new { displayName = "Self-hosted ARD Treasure Hunt", identifier = $"did:web:{r.Host}" },
     entries = new[]
     {
         new

@@ -79,19 +79,26 @@ resolves. A small [`infra/dns.bicep`](../infra/dns.bicep) provisions the **Azure
 az login ; azd auth login
 ./scripts/deploy-azure.ps1 -ZoneName example.com -HostLabel hunt -Location swedencentral
 ```
-The script runs `azd up` (compute), provisions `infra/dns.bicep` (DNS), then prints:
-1. the **four Azure name servers** to set at your registrar (one-time delegation), and
-2. the two commands to **bind your custom domain + a free managed cert** once delegation has propagated:
-   ```powershell
-   az containerapp hostname add  -g <rg> -n <artifacts-app> --hostname hunt.example.com
-   az containerapp hostname bind -g <rg> -n <artifacts-app> --hostname hunt.example.com --environment <env> --validation-method CNAME
-   ```
+The script runs `azd up` (which creates the resource group, Container Apps environment, registry, and the
+5 container apps from zero), provisions `infra/dns.bicep` (the DNS zone + records), then prints the **four
+Azure name servers** to set at your registrar.
+
+Then — the **one human step** — delegate `example.com` to those name servers at your registrar. Once
+delegation has propagated and the records resolve, run the **second script** to bind the custom domain +
+free managed cert (it polls until the binding is secured):
+```powershell
+./scripts/bind-domain.ps1 -ZoneName example.com -HostLabel hunt
+```
 
 ### Solve your own hunt
 ```powershell
 dotnet run --project src/Ard.Walker -- --domain hunt.example.com
 ```
 Real `https`, real public DNS-over-HTTPS, real MCP — your infrastructure end to end.
+
+> **First run resolves empty?** Public resolvers (`dns.google`/`cloudflare-dns.com`) negative-cache a name
+> that previously didn't exist. Azure publishes the new `_catalog`/`_search` records within ~60s, but give
+> the public DoH resolvers a few minutes to pick them up before the first walk.
 
 ### Cost & teardown
 Scale-to-zero Container Apps are **~$0 when idle**; the Azure DNS zone is ~$0.50/mo. Tear everything down with:
@@ -100,11 +107,9 @@ azd down --force --purge
 az network dns zone delete -g <rg> -n example.com
 ```
 
-### Honest caveats (verify on your first deploy — this was authored, not live-deployed here)
-- **Apex domains** (`-HostLabel "@"`) can't use a CNAME; add an **A record** to the Container Apps
-  environment static IP instead (`az containerapp env show ... --query properties.staticIp`). Subdomains
-  (the default) use the CNAME the script provisions.
-- The MCP **card URLs** are built from the resolved container endpoints — confirm they come out as the
-  **public** `*.azurecontainerapps.io` FQDNs (the servers use external ingress) so an external client can reach them.
-- Container app **resource names/outputs** vary by `azd` version; the script looks them up by name filter —
-  adjust the `az containerapp list` filters if a lookup returns empty.
+### Honest caveats (the IaC was authored to Azure's documented patterns + validated by `bicep build` / `azd infra generate`, but not live-deployed here)
+- **Apex vs subdomain** is handled automatically: a subdomain hunt (`-HostLabel hunt`, the default) provisions
+  a CNAME; an apex hunt (`-HostLabel "@"`) provisions an **A record** to the Container Apps environment static IP
+  (the script fetches it and the bicep fails clearly if it's missing).
+- Container app **resource names/outputs** can vary by `azd` version; the script resolves them by name filter and
+  asserts exactly one match — if a lookup throws, adjust the `az containerapp list` filter in `Get-AppName`.
