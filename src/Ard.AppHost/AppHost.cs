@@ -1,57 +1,68 @@
-// Ard.AppHost — .NET Aspire orchestration that runs the WHOLE treasure hunt locally with one command.
+// Ard.AppHost — .NET Aspire orchestration. Runs the WHOLE treasure hunt two ways:
 //
-//   dotnet run --project src/Ard.AppHost
+//   • LOCAL  (dotnet run):  starts Andreas's 4 TS servers + 2 .NET glue services + the walker,
+//                           with a local mock-DoH standing in for DNS. Press Start on "walker".
+//   • AZURE  (azd up):      deploys the 4 servers + Ard.Artifacts to Azure Container Apps. DNS is
+//                           real (Azure DNS, provisioned by infra/dns.bicep), so the local-only
+//                           mock-DoH and walker are excluded from the published app.
 //
-// It starts Andreas Adner's four vendored TypeScript servers (untouched), plus two tiny .NET glue
-// services — Ard.Artifacts (the well-known catalog + MCP cards) and Ard.MockDoH (a local DNS-over-HTTPS
-// stand-in for the _catalog TXT / _search SRV records) — and wires everything together by service
-// discovery, so there are no hard-coded URLs or ports. Then it points the existing Ard.Walker solver
-// at the local stack; press Start on "walker" in the dashboard to walk the trail and print the codes.
-//
-// Prereq (once): build the TS servers — see scripts/setup-local.ps1 (npm install + npm run build).
+// Local prereq (once): build the TS servers — see scripts/setup-local.ps1.
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-// --- Andreas's vendored TS servers (run via npm; Aspire assigns each its PORT) ---
+// --- Andreas's vendored TS servers (npm locally; containerized for Azure) ---
 var c1 = builder.AddNpmApp("challenge1-mcp", "../../servers/challenge1-mcp")
     .WithHttpEndpoint(env: "PORT")
-    .WithHttpHealthCheck("/healthz");
+    .WithHttpHealthCheck("/healthz")
+    .WithExternalHttpEndpoints()
+    .PublishAsDockerFile();
 
 var c2 = builder.AddNpmApp("challenge2-mcp", "../../servers/challenge2-mcp")
     .WithHttpEndpoint(env: "PORT")
-    .WithHttpHealthCheck("/healthz");
+    .WithHttpHealthCheck("/healthz")
+    .WithExternalHttpEndpoints()
+    .PublishAsDockerFile();
 
 var c3 = builder.AddNpmApp("challenge3-mcp", "../../servers/challenge3-mcp")
     .WithHttpEndpoint(env: "PORT")
-    .WithHttpHealthCheck("/healthz");
+    .WithHttpHealthCheck("/healthz")
+    .WithExternalHttpEndpoints()
+    .PublishAsDockerFile();
 
 var search = builder.AddNpmApp("challenge3-search", "../../servers/challenge3-search")
     .WithHttpEndpoint(env: "PORT")
-    .WithHttpHealthCheck("/healthz");
+    .WithHttpHealthCheck("/healthz")
+    .WithExternalHttpEndpoints()
+    .PublishAsDockerFile();
 
-// --- glue: the static well-known catalog + MCP cards, generated from the resolved MCP endpoints ---
+// --- glue: the well-known catalog + MCP cards, generated from the resolved MCP endpoints ---
+// In Azure this is the public entry point: bind your custom domain to THIS container app so
+// https://{domain}/.well-known/ai-catalog.json is served here (see docs/SELFHOST.md).
 var artifacts = builder.AddProject<Projects.Ard_Artifacts>("artifacts")
     .WithEnvironment("C1_BASE", c1.GetEndpoint("http"))
     .WithEnvironment("C2_BASE", c2.GetEndpoint("http"))
     .WithEnvironment("C3_BASE", c3.GetEndpoint("http"))
-    .WithHttpHealthCheck("/healthz");
+    .WithHttpHealthCheck("/healthz")
+    .WithExternalHttpEndpoints();
 
-// the search service returns OUR local challenge-3 card URL (its one env-overridable value)
+// the search service returns OUR challenge-3 card URL (its one env-overridable value)
 search.WithEnvironment("CARD3_URL", ReferenceExpression.Create($"{artifacts.GetEndpoint("http")}/cards/challenge3.mcp.json"));
 
-// --- glue: the mock DoH resolver serving the _catalog TXT + _search SRV records ---
-var mockDoh = builder.AddProject<Projects.Ard_MockDoH>("mockdoh")
-    .WithEnvironment("CATALOG2_URL", ReferenceExpression.Create($"{artifacts.GetEndpoint("http")}/c2/ai-catalog.json"))
-    .WithEnvironment("SEARCH_URL", search.GetEndpoint("http"))
-    .WithHttpHealthCheck("/healthz");
+// --- LOCAL ONLY: the mock DoH resolver + the walker (Azure uses real DNS + an external client) ---
+if (builder.ExecutionContext.IsRunMode)
+{
+    var mockDoh = builder.AddProject<Projects.Ard_MockDoH>("mockdoh")
+        .WithEnvironment("CATALOG2_URL", ReferenceExpression.Create($"{artifacts.GetEndpoint("http")}/c2/ai-catalog.json"))
+        .WithEnvironment("SEARCH_URL", search.GetEndpoint("http"))
+        .WithHttpHealthCheck("/healthz");
 
-// --- the existing .NET solver, pointed at the local stack (press Start in the dashboard to run) ---
-builder.AddProject<Projects.Ard_Walker>("walker")
-    .WithEnvironment("ARD_SCHEME", "http")
-    .WithEnvironment("ARD_SEED_DOMAIN", ReferenceExpression.Create(
-        $"{artifacts.GetEndpoint("http").Property(EndpointProperty.Host)}:{artifacts.GetEndpoint("http").Property(EndpointProperty.Port)}"))
-    .WithEnvironment("ARD_DOH_RESOLVER", ReferenceExpression.Create($"{mockDoh.GetEndpoint("http")}/resolve"))
-    .WaitFor(c1).WaitFor(c2).WaitFor(c3).WaitFor(search).WaitFor(artifacts).WaitFor(mockDoh)
-    .WithExplicitStart();
+    builder.AddProject<Projects.Ard_Walker>("walker")
+        .WithEnvironment("ARD_SCHEME", "http")
+        .WithEnvironment("ARD_SEED_DOMAIN", ReferenceExpression.Create(
+            $"{artifacts.GetEndpoint("http").Property(EndpointProperty.Host)}:{artifacts.GetEndpoint("http").Property(EndpointProperty.Port)}"))
+        .WithEnvironment("ARD_DOH_RESOLVER", ReferenceExpression.Create($"{mockDoh.GetEndpoint("http")}/resolve"))
+        .WaitFor(c1).WaitFor(c2).WaitFor(c3).WaitFor(search).WaitFor(artifacts).WaitFor(mockDoh)
+        .WithExplicitStart();
+}
 
 builder.Build().Run();

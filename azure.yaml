@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+#
+# azd config for deploying the self-hosted hunt to Azure Container Apps.
+#   azd auth login
+#   azd up                 # provisions + deploys the 4 servers + Ard.Artifacts as Container Apps
+# Then run scripts/deploy-azure.ps1 to add Azure DNS (the _catalog TXT / _search SRV) and bind your
+# custom domain. See docs/SELFHOST.md for the full runbook.
+name: ard-treasure-hunt
+services:
+  app:
+    language: dotnet
+    project: src/Ard.AppHost/Ard.AppHost.csproj
+    host: containerapp
