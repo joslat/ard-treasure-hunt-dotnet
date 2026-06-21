@@ -27,8 +27,8 @@ services so nothing leaves your machine.
    └─ walker        (.NET)  → the existing solver, pointed at the local stack
 ```
 
-**Prerequisites:** [.NET 10 SDK](https://dotnet.microsoft.com/download), [Node 20+](https://nodejs.org),
-and the Aspire templates (`dotnet new install Aspire.ProjectTemplates`).
+**Prerequisites:** [.NET 10 SDK](https://dotnet.microsoft.com/download) and [Node 20+](https://nodejs.org).
+(No Aspire workload or templates needed — the AppHost is an SDK-style project restored from NuGet on build.)
 
 ```powershell
 # 1. one-time: build the vendored TS servers
@@ -41,7 +41,7 @@ dotnet run --project src/Ard.AppHost
 Open the dashboard URL it prints, then press **Start** on the `walker` resource — it walks
 all three discovery mechanisms against the local stack and prints the three codes
 (`Rip and tear!` · `Sean Astrakhan` · `1337 h4x0r`). Everything is `http://localhost:*`;
-the client's `--local` wiring (an `http` scheme + the mock-DoH resolver) is injected by the
+the local-mode wiring (the `ARD_SCHEME=http`, `ARD_DOH_RESOLVER`, and `ARD_SEED_DOMAIN` environment variables) is injected into the walker by the
 AppHost via service discovery.
 
 > **How the local DNS works:** real ARD uses DNS-over-HTTPS to public resolvers. `Ard.MockDoH`
@@ -70,7 +70,7 @@ resolves. A small [`infra/dns.bicep`](../infra/dns.bicep) provisions the **Azure
 ```
 
 ### Prerequisites
-- [`azd`](https://aka.ms/azd) + [`az`](https://aka.ms/azcli) + Docker, and an Azure subscription.
+- [`azd`](https://aka.ms/azd) + [`az`](https://aka.ms/azcli) + a **running Docker daemon** (the servers ship via `.PublishAsDockerFile()`, so `azd up` builds their images locally), and an Azure subscription.
 - **A domain you own** (or a subdomain, e.g. `hunt.example.com`) that you can **delegate to Azure DNS**.
   This is the one step no IaC can do for you — your registrar controls the NS records.
 

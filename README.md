@@ -8,7 +8,7 @@ Starting from a single clue — `https://nullpointer.se/.well-known/ai-catalog.j
 
 - 🧭 **Want to learn it?** → start the [**workshop**](workshop/README.md). Seven labs, build it yourself with an AI agent, understand every line.
 - 🏃 **Want to run it?** → jump to [Quickstart](#quickstart).
-- 🏗️ **Want to host your _own_ hunt?** → [`docs/SELFHOST.md`](docs/SELFHOST.md) — stand up the whole chain locally for free with **.NET Aspire** (`dotnet run` and a dashboard); Azure deploy via `azd` coming next.
+- 🏗️ **Want to host your _own_ hunt?** → [`docs/SELFHOST.md`](docs/SELFHOST.md) — stand up the whole chain locally for free with **.NET Aspire** (`dotnet run` and a dashboard), or deploy it to **your own Azure subscription** via `azd` + Bicep (scale-to-zero Container Apps, ~$0 idle).
 - 📚 **Links & credits** → [`docs/REFERENCES.md`](docs/REFERENCES.md) — the ARD spec, MCP Apps docs, and the original hunt.
 
 > ⚠️ **Spoiler warning.** This repo is a *complete solution and teaching kit*: it contains the three completion codes and the full discovery path (and `artifacts/run/award.png` shows the final code). If you'd rather solve the hunt yourself first, stop here and start from the only clue you're meant to have: `https://nullpointer.se/.well-known/ai-catalog.json`.
@@ -124,9 +124,10 @@ The capstone. It renders challenge 3 as a **real MCP App** and captures it. This
 
 ## Prerequisites
 
-- **.NET 9 SDK** (or newer — built/tested with the .NET 10 SDK).
+- **.NET 9 SDK** for the solver/award apps (`Ard.Core` · `Ard.Walker` · `Ard.AwardApp`).
 - **WebView2 Runtime** (pre-installed on Windows 11) — only needed for `Ard.AwardApp`.
 - Internet access — the challenge servers are live on Azure. DNS-over-HTTPS is used, so no `dig` required.
+- **For the self-hosted hunt** (see [`docs/SELFHOST.md`](docs/SELFHOST.md)): the **.NET 10 SDK** (the Aspire AppHost + glue services target `net10.0`) and **Node 20+** (to build the vendored TS servers via `scripts/setup-local.ps1`); plus `azd`, `az`, and **Docker** for the optional Azure deploy.
 
 ---
 

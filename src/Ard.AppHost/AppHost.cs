@@ -10,6 +10,12 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+// Azure publish only: model the Azure Container Apps environment so `azd up` has an ACA environment
+// to attach the container apps to (Aspire 9.4+ no longer creates one implicitly).
+// WithAzdResourceNaming() keeps azd's existing resource-naming scheme.
+if (builder.ExecutionContext.IsPublishMode)
+    builder.AddAzureContainerAppEnvironment("aca-env").WithAzdResourceNaming();
+
 // --- Andreas's vendored TS servers (npm locally; containerized for Azure) ---
 var c1 = builder.AddNpmApp("challenge1-mcp", "../../servers/challenge1-mcp")
     .WithHttpEndpoint(env: "PORT")

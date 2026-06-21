@@ -6,11 +6,26 @@
 //
 // Config (injected by the AppHost): C1_BASE, C2_BASE, C3_BASE (the three MCP server base URLs).
 
+using Microsoft.AspNetCore.HttpOverrides;
+
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-static string Mcp(string envName) =>
-    (Environment.GetEnvironmentVariable(envName) ?? "http://localhost:0").TrimEnd('/') + "/mcp";
+// Behind Azure Container Apps ingress (TLS terminated at the proxy), honor X-Forwarded-Proto/Host so the
+// generated card/catalog URLs come out https://{custom domain} rather than http://. Harmless locally.
+var fwd = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost };
+fwd.KnownNetworks.Clear();
+fwd.KnownProxies.Clear();
+app.UseForwardedHeaders(fwd);
+
+static string Mcp(string envName)
+{
+    var b = Environment.GetEnvironmentVariable(envName);
+    if (string.IsNullOrWhiteSpace(b))
+        throw new InvalidOperationException(
+            $"{envName} is not set — Ard.Artifacts cannot build the MCP card endpoint. The AppHost injects C1_BASE/C2_BASE/C3_BASE; when running the container standalone, set it to the server's public ingress base URL.");
+    return b.TrimEnd('/') + "/mcp";
+}
 
 static string Self(HttpRequest r) => $"{r.Scheme}://{r.Host}";
 

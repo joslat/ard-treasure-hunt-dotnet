@@ -12,7 +12,10 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
-# Container Apps sets PORT; the servers read process.env.PORT.
+# Container Apps injects PORT; the servers read process.env.PORT (this is just the local default).
 ENV PORT=8080
 EXPOSE 8080
-CMD ["npm", "start"]
+# Drop root: the official node image ships a non-root `node` user (uid 1000).
+USER node
+# Exec form so Node is PID 1 and receives SIGTERM directly (graceful shutdown).
+CMD ["node", "dist/main.js"]
