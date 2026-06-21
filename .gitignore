@@ -14,6 +14,9 @@ dist/
 
 # Aspire / azd
 .azure/
+src/Ard.AppHost/infra/
+**/aspire-manifest.json
+infra/*.json
 
 # Committed showcase image lives in artifacts/run/ — keep only award.png there
 /artifacts/run/*
