@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>ARD Challenge — Award</title>
+</head>
+<body>
+  <main class="award">
+    <div class="medal" aria-hidden="true">
+      <div class="medal-ring">🏆</div>
+    </div>
+
+    <h1 class="headline" id="headline">
+      Congrats, you solved the Agentic Resource Discovery (ARD) challenge!
+    </h1>
+    <p class="subhead">
+      You followed the discovery trail — well-known catalog, DNS, semantic search —
+      all the way to an MCP&nbsp;Apps experience. Legendary.
+    </p>
+
+    <label class="field">
+      <span class="field-label">Your name</span>
+      <input type="text" id="player-name" placeholder="Enter your name" autocomplete="name" />
+    </label>
+
+    <label class="field">
+      <span class="field-label">Completion code</span>
+      <div class="code-row">
+        <input type="text" id="completion-code" value="1337 h4x0r" readonly />
+        <button type="button" id="copy-code" class="copy-btn" title="Copy code">Copy</button>
+      </div>
+    </label>
+
+    <p class="footer-note" id="player-greeting"></p>
+  </main>
+  <script type="module" src="/src/mcp-app.ts"></script>
+</body>
+</html>

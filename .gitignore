@@ -8,6 +8,13 @@
 *.nupkg
 packages/
 
+# Node (vendored TS servers under servers/* also carry their own .gitignore)
+node_modules/
+dist/
+
+# Aspire / azd
+.azure/
+
 # Committed showcase image lives in artifacts/run/ — keep only award.png there
 /artifacts/run/*
 !/artifacts/run/award.png

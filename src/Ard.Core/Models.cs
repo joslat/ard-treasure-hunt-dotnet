@@ -119,11 +119,12 @@ public sealed class DohAnswer
 /// <summary>A parsed SRV record: <c>priority weight port target</c>.</summary>
 public sealed record SrvRecord(int Priority, int Weight, int Port, string Target)
 {
-    /// <summary>Base URL implied by the SRV target+port (drops the default :443 for https).</summary>
-    public string ToBaseUrl()
+    /// <summary>Base URL implied by the SRV target+port (drops the scheme's default port). Pass <c>scheme: "http"</c> for a local self-hosted hunt.</summary>
+    public string ToBaseUrl(string scheme = "https")
     {
         var host = Target.TrimEnd('.');
-        return Port == 443 ? $"https://{host}" : $"https://{host}:{Port}";
+        var defaultPort = scheme == "http" ? 80 : 443;
+        return Port == defaultPort ? $"{scheme}://{host}" : $"{scheme}://{host}:{Port}";
     }
 
     public override string ToString() => $"{Priority} {Weight} {Port} {Target}";
