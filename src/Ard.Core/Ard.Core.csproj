@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Expose internal pure-logic helpers (SSE reassembly, code extraction, TXT unquoting) to the unit tests. -->
+    <InternalsVisibleTo Include="Ard.Core.Tests" />
+  </ItemGroup>
+
 </Project>

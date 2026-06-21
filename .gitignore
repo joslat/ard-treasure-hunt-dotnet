@@ -8,6 +8,9 @@
 *.nupkg
 packages/
 
-# Generated run output — keep only the showcase award.png referenced by the README
+# Committed showcase image lives in artifacts/run/ — keep only award.png there
 /artifacts/run/*
 !/artifacts/run/award.png
+
+# Default walker / award output (hunt-report.json + award.html, created by `dotnet run`)
+ard-output/

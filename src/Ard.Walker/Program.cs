@@ -182,7 +182,7 @@ async Task ServersAsync()
                         var result = await mcp.CallToolAsync(tool);
                         var sc = result.TryGetProperty("structuredContent", out var s) && s.TryGetProperty("code", out var scode)
                             ? scode.GetString() : null;
-                        var text = result.TryGetProperty("content", out var c) && c.GetArrayLength() > 0
+                        var text = result.TryGetProperty("content", out var c) && c.ValueKind == JsonValueKind.Array && c.GetArrayLength() > 0
                             && c[0].TryGetProperty("text", out var tx) ? tx.GetString() : "";
                         WriteColor(ConsoleColor.Yellow, $"      {tool} → {sc ?? Trim(text)}");
                     }
@@ -207,7 +207,7 @@ async Task AwardAsync()
     if (endpoint is null)
     {
         Banner($"Discovering the challenge-3 MCP App via ARD ({domain})");
-        var (search, srv, registry) = await resolver.ResolveDnsRegistryAsync(domain, "treasure hunt challenge");
+        var (search, _, registry) = await resolver.ResolveDnsRegistryAsync(domain, "treasure hunt challenge");
         Console.WriteLine($"  SRV → registry {registry}");
         var top = search.Results.OrderByDescending(s => s.Score).First();
         var card = await resolver.FetchCardAsync(top.Url!);
@@ -265,15 +265,15 @@ static void PrintHelp()
         ARD Treasure Hunt — .NET walker & reproduction toolkit
 
           walk   [--domain d] [--out dir] [--name n]   Walk the whole trail (default command)
-          dns    <domain>                              Show ARD TXT + SRV records (§6.1)
-          fetch  <url>                                 GET a static artifact, pretty-print (§6.2)
-          mcp    <endpoint-url>                        Minimal MCP client: init/list/call (§6.3)
+          dns    <domain>                              Show ARD TXT + SRV records
+          fetch  <url>                                 GET a static artifact, pretty-print
+          mcp    <endpoint-url>                        Minimal MCP client: init/list/call
           servers [--config mcp.json]                  Connect to every server in an mcp.json
-          award  [--domain d] [--endpoint u] [--out d] Fetch + save the MCP App award (§6.4)
+          award  [--domain d] [--endpoint u] [--out d] Fetch + save the MCP App award
 
         Examples
           dotnet run --project src/Ard.Walker
           dotnet run --project src/Ard.Walker -- dns nullpointer.se
-          dotnet run --project src/Ard.Walker -- mcp https://ard-281f1ff05c2d4870.azurewebsites.net/mcp
+          dotnet run --project src/Ard.Walker -- mcp https://<mcp-server-host>/mcp
         """);
 }

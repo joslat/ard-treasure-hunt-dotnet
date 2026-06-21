@@ -22,7 +22,7 @@ public sealed class DnsOverHttps
     private const int TypeTxt = 16;
     private const int TypeSrv = 33;
 
-    /// <summary>Resolve TXT records for a name; returns the raw, unquoted strings.</summary>
+    /// <summary>Resolve TXT records for a name; returns the unquoted values, with multi-chunk ("a" "b") TXT records concatenated.</summary>
     public async Task<IReadOnlyList<string>> ResolveTxtAsync(string name, CancellationToken ct = default)
     {
         var answers = await QueryAsync(name, TypeTxt, ct);
@@ -78,7 +78,7 @@ public sealed class DnsOverHttps
 
     // TXT data may arrive wrapped in quotes, and long TXT records may be split into
     // multiple quoted chunks ("part1" "part2") that must be concatenated.
-    private static string Unquote(string data)
+    internal static string Unquote(string data)
     {
         data = data.Trim();
         if (!data.Contains('"')) return data;
@@ -90,6 +90,7 @@ public sealed class DnsOverHttps
             if (c == '"') { inQuote = !inQuote; if (!inQuote) { chunks.Add(current.ToString()); current.Clear(); } }
             else if (inQuote) current.Append(c);
         }
+        if (current.Length > 0) chunks.Add(current.ToString()); // flush text after an unterminated quote
         return chunks.Count > 0 ? string.Concat(chunks) : data.Trim('"');
     }
 }

@@ -1,5 +1,7 @@
 # ARD Treasure Hunt — .NET Toolkit & Workshop
 
+[![CI](https://github.com/joslat/ard-treasure-hunt-dotnet/actions/workflows/ci.yml/badge.svg)](https://github.com/joslat/ard-treasure-hunt-dotnet/actions/workflows/ci.yml)
+
 A **.NET 9 / C#** toolkit that solves [Andreas Adner](https://nullpointer.se/)'s [Agentic Resource Discovery (ARD)](https://agenticresourcediscovery.org/) treasure hunt end-to-end — and a **hands-on workshop** that teaches you to build it yourself, step by step.
 
 Starting from a single clue — `https://nullpointer.se/.well-known/ai-catalog.json` — the toolkit walks all three ARD discovery mechanisms, connects to each hidden MCP server, collects the completion codes, and renders the final **MCP Apps** trophy as a PNG.
@@ -96,7 +98,7 @@ A single-file `Program.cs` that is both the **headless solver** and the **Part-6
 
 | Command | What it does | Concept |
 |---------|--------------|---------|
-| `walk` *(default)* | Walks the full trail from the seed domain, prints the three codes, saves `hunt-report.json` + `award.html`. | full traversal |
+| `walk` *(default)* | Walks the full trail from the seed domain, prints the three codes, saves `hunt-report.json` + `award.html` to `ard-output/` (override with `--out <dir>`). | full traversal |
 | `dns <domain>` | Shows the ARD `TXT` + `SRV` records for a domain. | DNS discovery |
 | `fetch <url>` | GETs a static artifact and pretty-prints the JSON. | static fetch |
 | `mcp <endpoint>` | Minimal MCP client: `initialize`, `tools/list`, call every tool. | MCP client |
@@ -127,6 +129,18 @@ The capstone. It renders challenge 3 as a **real MCP App** and captures it. This
 
 ---
 
+## Tests
+
+`Ard.Core`'s pure protocol logic is covered by an offline **xUnit** suite (`tests/Ard.Core.Tests`, no network):
+
+```powershell
+dotnet test
+```
+
+It locks down the fiddly parts: **SSE event-boundary reassembly**, TXT unquoting (incl. multi-chunk records), `SRV → base-URL` derivation, the completion-code regex + `structuredContent` parsing, `McpConfig` (both `servers`/`mcpServers` schemas), and the camelCase/PascalCase JSON round-trips. CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) builds + tests on **Windows** (full toolkit) and **Linux** (the cross-platform core) on every push and PR.
+
+---
+
 ## Quickstart
 
 ```powershell
@@ -134,7 +148,7 @@ The capstone. It renders challenge 3 as a **real MCP App** and captures it. This
 dotnet run --project src/Ard.Walker
 
 # 2. Render the trophy for your name and save a PNG
-dotnet run --project src/Ard.AwardApp -- --screenshot artifacts/run/award.png --name "José Luis Latorre"
+dotnet run --project src/Ard.AwardApp -- --screenshot ard-output/award.png --name "José Luis Latorre"
 
 # 3. Open the interactive award window
 dotnet run --project src/Ard.AwardApp
@@ -146,7 +160,7 @@ More commands:
 dotnet run --project src/Ard.Walker -- dns nullpointer.se          # show TXT + SRV records
 dotnet run --project src/Ard.Walker -- mcp https://ard-281f1ff05c2d4870.azurewebsites.net/mcp
 dotnet run --project src/Ard.Walker -- servers --config mcp.json   # connect to every server in mcp.json
-dotnet run --project src/Ard.AwardApp -- --html artifacts/run/award.html --screenshot out.png   # offline
+dotnet run --project src/Ard.AwardApp -- --html artifacts/captured/award.html --screenshot ard-output/out.png   # offline
 ```
 
 ---
@@ -174,7 +188,7 @@ Four ready-to-use config files ship in the repo (all point at the same three str
 | File | Used by | Schema |
 |------|---------|--------|
 | [`mcp.json`](mcp.json) | This toolkit (`servers` command), Visual Studio | `{ "servers": { … "type": "http" } }` |
-| [`.vscode/mcp.json`](.vscode/mcp.json) | **VS Code** (auto-discovered) | `{ "servers": { … } }` |
+| [`.vscode/mcp.json`](.vscode/mcp.json) | **VS Code** (auto-discovered) | `{ "servers": { … "type": "http" } }` |
 | [`.mcp.json`](.mcp.json) | **Claude Code** CLI | `{ "mcpServers": { … "type": "http" } }` |
 | [`config/claude_desktop_config.json`](config/claude_desktop_config.json) | **Claude Desktop** (fallback) | `mcp-remote` stdio bridge |
 
@@ -213,11 +227,12 @@ ARDChallenge.slnx
 ├─ mcp.json / .vscode/mcp.json / .mcp.json / config/   ← client configs
 ├─ artifacts/
 │   ├─ captured/award.html       ← a known-good award (offline fallback)
-│   └─ run/                      ← walk + render output (award.png, hunt-report.json)
-└─ src/
-    ├─ Ard.Core/                 ← the protocol library
-    ├─ Ard.Walker/               ← console walker + toolkit
-    └─ Ard.AwardApp/             ← WinForms + WebView2 renderer
+│   └─ run/award.png             ← the committed showcase image (shown above)
+├─ src/
+│   ├─ Ard.Core/                 ← the protocol library
+│   ├─ Ard.Walker/               ← console walker + toolkit
+│   └─ Ard.AwardApp/             ← WinForms + WebView2 renderer
+└─ ard-output/                   ← created on first run: hunt-report.json + award.html (git-ignored)
 ```
 
 *Credit: the hunt is by [Andreas Adner](https://nullpointer.se/). This repo is a .NET study/solution + teaching kit built around it.*

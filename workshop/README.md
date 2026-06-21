@@ -89,7 +89,7 @@ Each lab is **self-contained and cumulative**: by Lab 06 your code looks a lot l
 - **`ai-catalog.json`** — the ARD manifest a publisher hosts; its `entries[]` point at resources.
 - **MCP card** (`application/mcp-server+json`) — how to connect to one MCP server (endpoint + tools).
 - **MCP** — JSON-RPC 2.0 between an agent and a server (tools, resources, prompts). Here it rides **streamable-HTTP**.
-- **streamable-HTTP** — MCP over HTTP where responses may come back as Server-Sent Events.
+- **streamable-HTTP** — MCP over HTTP where responses may come back as **Server-Sent Events (SSE)**.
 - **MCP Apps** — an MCP extension (SEP-1865, `io.modelcontextprotocol/ui`) that lets a tool return an interactive HTML UI.
 
 ➡️ **Start here: [Lab 00 — Setup & primer](00-setup-and-primer.md)**

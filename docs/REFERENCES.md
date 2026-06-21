@@ -2,7 +2,7 @@
 
 This repo is a **.NET / C# solution and teaching kit** built around Andreas Adner's *Agentic Resource Discovery (ARD) treasure hunt*. This page collects the (non-spoiler) external resources the toolkit and workshop build on.
 
-> ⚠️ **Spoiler note:** the rest of this repository (the `README`, the `workshop/`, and `artifacts/award.png`) *does* contain the solution — the completion codes and the full discovery path. If you want to solve the hunt yourself first, start from the single clue `https://nullpointer.se/.well-known/ai-catalog.json` and come back afterwards.
+> ⚠️ **Spoiler note:** the rest of this repository (the `README`, the `workshop/`, and `artifacts/run/award.png`) *does* contain the solution — the completion codes and the full discovery path. If you want to solve the hunt yourself first, start from the single clue `https://nullpointer.se/.well-known/ai-catalog.json` and come back afterwards.
 
 ---
 

@@ -12,7 +12,7 @@ This is the capstone. In Lab 04 you *fetched* the UI; now you *run* it the way V
 
 ### Who's who in MCP Apps
 
-The award SPA is a **guest** that expects a **host** around it. They talk over `postMessage` using JSON-RPC. Your job is the host side.
+The award SPA is a **guest** that expects a **host** around it. They talk over `postMessage` using JSON-RPC: because the guest runs inside the iframe, it reaches the host via `window.parent.postMessage`, and the host replies to `event.source`. Your job is the host side.
 
 ```
  MCP Server (challenge 3)        Your Host (WebView2 wrapper)        The View (award iframe)
@@ -41,11 +41,11 @@ The **name field + greeting** ("Nice work, {name}! 🎉") and **Copy** button ar
 
 ### Security model (why a sandbox)
 
-A host must treat server-supplied UI as untrusted: render it in a **sandboxed iframe** (the reference uses `sandbox="allow-scripts allow-popups allow-forms"` — note the absence of `allow-same-origin`), so it can't touch your DOM/cookies/storage — only `postMessage`. The award is self-contained, so a restrictive CSP is satisfied trivially. This is non-negotiable in a real host and a great thing to internalize here.
+A host must treat server-supplied UI as untrusted: render it in a **sandboxed iframe** (the reference uses `sandbox="allow-scripts allow-popups allow-forms"` — note the absence of `allow-same-origin`), so it can't touch your DOM/cookies/storage — only `postMessage`. The award is self-contained, so a restrictive CSP is satisfied trivially. This is non-negotiable in a real host and a great thing to internalize here. One consequence: a sandboxed iframe wants a real **origin**, so instead of a `file://` path we map our temp folder to a fake `https` host (`SetVirtualHostNameToFolderMapping` → `https://appassets.ard/`) and navigate there.
 
 ### Capturing the PNG
 
-Use the **Chrome DevTools Protocol** via WebView2's `CallDevToolsProtocolMethodAsync`:
+WebView2 is Chromium under the hood, so we drive it with the same **Chrome DevTools Protocol (CDP)** browsers expose for automation — via WebView2's `CallDevToolsProtocolMethodAsync`:
 
 - `Page.captureScreenshot` with `captureBeyondViewport:true` — reliable full-content PNG that **works off-screen** (unlike `CapturePreviewAsync`, which only grabs the visible viewport).
 - Wait **past** `NavigationCompleted` for actual paint (two `requestAnimationFrame`s + `document.fonts.ready`).
@@ -78,7 +78,7 @@ Use the **Chrome DevTools Protocol** via WebView2's `CallDevToolsProtocolMethodA
 ## ✅ Checkpoint
 
 ```powershell
-dotnet run --project src/Ard.AwardApp -- --screenshot artifacts/run/award.png --name "Your Name"
+dotnet run --project src/Ard.AwardApp -- --screenshot ard-output/award.png --name "Your Name"
 ```
 
 Open `award.png`: a **dark card, gold trophy, gold headline, your name, code `1337 h4x0r`, and "Nice work, Your Name! 🎉"**. 🏆

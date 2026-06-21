@@ -31,6 +31,7 @@ public sealed class AwardOptions
         for (var i = 0; i < args.Length; i++)
         {
             string Next() => i + 1 < args.Length ? args[++i] : throw new ArgumentException($"Missing value for {args[i]}");
+            int PosInt(string flag) { var v = Next(); return int.TryParse(v, out var n) && n > 0 ? n : throw new ArgumentException($"{flag} expects a positive integer, got '{v}'"); }
             switch (args[i].ToLowerInvariant())
             {
                 case "--screenshot" or "-s": o.ScreenshotPath = Path.GetFullPath(Next()); break;
@@ -39,9 +40,9 @@ public sealed class AwardOptions
                 case "--endpoint" or "-e": o.Endpoint = Next(); break;
                 case "--walk": o.Walk = true; break;
                 case "--html": o.HtmlPath = Path.GetFullPath(Next()); break;
-                case "--width": o.Width = int.Parse(Next()); break;
-                case "--height": o.Height = int.Parse(Next()); break;
-                case "--scale": o.Scale = int.Parse(Next()); break;
+                case "--width": o.Width = PosInt("--width"); break;
+                case "--height": o.Height = PosInt("--height"); break;
+                case "--scale": o.Scale = PosInt("--scale"); break;
                 case "-h" or "--help": o.ShowHelp = true; break;
                 default: throw new ArgumentException($"Unknown argument '{args[i]}'");
             }
@@ -64,7 +65,7 @@ public sealed class AwardOptions
 
         Examples
           dotnet run --project src/Ard.AwardApp
-          dotnet run --project src/Ard.AwardApp -- --screenshot award.png --name "José Luis Latorre"
-          dotnet run --project src/Ard.AwardApp -- --html artifacts/run/award.html --screenshot award.png
+          dotnet run --project src/Ard.AwardApp -- --screenshot ard-output/award.png --name "José Luis Latorre"
+          dotnet run --project src/Ard.AwardApp -- --html artifacts/captured/award.html --screenshot ard-output/award.png
         """;
 }
