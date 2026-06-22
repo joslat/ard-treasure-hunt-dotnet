@@ -61,7 +61,7 @@ seed: nullpointer.se
 
 ## The projects, in depth
 
-The solution (`ARDChallenge.slnx`) is three projects. The dependency arrow is one-way: both apps depend on the library, the library depends on nothing but the BCL.
+The toolkit is three projects (the `ARDChallenge.slnx` solution also includes the `tests/` suite and the self-host projects grouped under the `selfhost/` solution folder, though they physically live in `src/` — see [`docs/SELFHOST.md`](docs/SELFHOST.md)). The dependency arrow is one-way: both apps depend on the library, the library depends on nothing but the BCL.
 
 ```
             ┌──────────────────────────────────────────────┐
@@ -224,8 +224,11 @@ Four ready-to-use config files ship in the repo (all point at the same three str
 ```
 ARDChallenge.slnx
 ├─ README.md                     ← you are here
-├─ docs/REFERENCES.md            ← spec, MCP Apps & editor links + credit
+├─ docs/
+│   ├─ SELFHOST.md               ← stand up your own hunt (Aspire local / azd + Azure)
+│   └─ REFERENCES.md             ← spec, MCP Apps & editor links + credit
 ├─ workshop/                     ← the guided, build-it-yourself labs
+├─ NOTICE                        ← attribution for the vendored servers/
 ├─ mcp.json / .vscode/mcp.json / .mcp.json / config/   ← client configs
 ├─ artifacts/
 │   ├─ captured/award.html       ← a known-good award (offline fallback)
@@ -233,7 +236,15 @@ ARDChallenge.slnx
 ├─ src/
 │   ├─ Ard.Core/                 ← the protocol library
 │   ├─ Ard.Walker/               ← console walker + toolkit
-│   └─ Ard.AwardApp/             ← WinForms + WebView2 renderer
+│   ├─ Ard.AwardApp/             ← WinForms + WebView2 renderer
+│   ├─ Ard.AppHost/              ← .NET Aspire orchestrator (self-host)
+│   ├─ Ard.Artifacts/            ← serves the well-known catalog + MCP cards (self-host)
+│   └─ Ard.MockDoH/              ← local DNS-over-HTTPS stand-in (self-host)
+├─ servers/                      ← Andreas's 4 vendored TS servers (see NOTICE)
+├─ infra/dns.bicep               ← Azure DNS zone + _catalog TXT / _search SRV
+├─ scripts/                      ← setup-local.ps1 · deploy-azure.ps1 · bind-domain.ps1
+├─ azure.yaml                    ← azd config (Aspire → Container Apps)
+├─ tests/Ard.Core.Tests/         ← xUnit + Moq suite
 └─ ard-output/                   ← created on first run: hunt-report.json + award.html (git-ignored)
 ```
 

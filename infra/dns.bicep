@@ -7,6 +7,7 @@
 // The FQDNs + verification id come from the Container Apps that `azd up` deployed — scripts/deploy-azure.ps1
 // reads them and passes them in. Deploy at the SUBSCRIPTION/RESOURCE-GROUP scope:
 //   az deployment group create -g <rg> -f infra/dns.bicep -p zoneName=<zone> hostLabel=hunt searchFqdn=<search app fqdn> artifactsFqdn=<artifacts app fqdn> artifactsCustomDomainVerificationId=<verification id>
+//   (apex hunt: also pass hostLabel=@ envStaticIp=<env static ip>  — from `az containerapp env show --query properties.staticIp`)
 
 targetScope = 'resourceGroup'
 
@@ -60,7 +61,7 @@ resource searchSrv 'Microsoft.Network/dnsZones/SRV@2018-05-01' = {
   properties: {
     TTL: 3600
     SRVRecords: [
-      { priority: 0, weight: 0, port: 443, target: searchFqdn }
+      { priority: 0, weight: 0, port: 443, target: '${searchFqdn}.' }
     ]
   }
 }
@@ -87,7 +88,7 @@ resource artifactsCname 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = if (!isA
   properties: {
     TTL: 3600
     CNAMERecord: {
-      cname: artifactsFqdn
+      cname: '${artifactsFqdn}.'
     }
   }
 }
@@ -100,7 +101,7 @@ resource artifactsApexA 'Microsoft.Network/dnsZones/A@2018-05-01' = if (isApex) 
   properties: {
     TTL: 3600
     ARecords: [
-      { ipv4Address: envStaticIp }
+      { ipv4Address: isApex && empty(envStaticIp) ? fail('Apex hunts (hostLabel "@") require envStaticIp — pass `az containerapp env show --query properties.staticIp`.') : envStaticIp }
     ]
   }
 }

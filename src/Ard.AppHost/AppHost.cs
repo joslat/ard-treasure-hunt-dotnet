@@ -8,7 +8,15 @@
 //
 // Local prereq (once): build the TS servers — see scripts/setup-local.ps1.
 
+using Azure.Provisioning.AppContainers;
+
 var builder = DistributedApplication.CreateBuilder(args);
+
+// Scale every published container app to zero when idle (cheap idle; cold-start on first request — fine for a hunt).
+static void ScaleToZero(Azure.Provisioning.AppContainers.ContainerApp app)
+{
+    app.Template.Scale = new ContainerAppScale { MinReplicas = 0, MaxReplicas = 3 };
+}
 
 // Azure publish only: model the Azure Container Apps environment so `azd up` has an ACA environment
 // to attach the container apps to (Aspire 9.4+ no longer creates one implicitly).
@@ -17,29 +25,41 @@ if (builder.ExecutionContext.IsPublishMode)
     builder.AddAzureContainerAppEnvironment("aca-env").WithAzdResourceNaming();
 
 // --- Andreas's vendored TS servers (npm locally; containerized for Azure) ---
-var c1 = builder.AddNpmApp("challenge1-mcp", "../../servers/challenge1-mcp")
+// NOTE: deliberately Aspire.Hosting.NodeJs / AddNpmApp (default script "start"). The newer
+// Aspire.Hosting.JavaScript / AddJavaScriptApp defaults to "dev" (tsc --watch — never starts a listener)
+// AND rejects a runScriptName when an existing Dockerfile is present, breaking the azd publish path with
+// our custom multi-stage Dockerfiles. The NodeJs package is pinned and works for both run and publish.
+var c1 = builder.AddNpmApp("challenge1-mcp", "../../servers/challenge1-mcp", "start")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()
-    .PublishAsDockerFile();
+    .WithEnvironment("NODE_ENV", builder.ExecutionContext.IsPublishMode ? "production" : "development")
+    .PublishAsDockerFile()
+    .PublishAsAzureContainerApp((infra, app) => ScaleToZero(app));
 
-var c2 = builder.AddNpmApp("challenge2-mcp", "../../servers/challenge2-mcp")
+var c2 = builder.AddNpmApp("challenge2-mcp", "../../servers/challenge2-mcp", "start")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()
-    .PublishAsDockerFile();
+    .WithEnvironment("NODE_ENV", builder.ExecutionContext.IsPublishMode ? "production" : "development")
+    .PublishAsDockerFile()
+    .PublishAsAzureContainerApp((infra, app) => ScaleToZero(app));
 
-var c3 = builder.AddNpmApp("challenge3-mcp", "../../servers/challenge3-mcp")
+var c3 = builder.AddNpmApp("challenge3-mcp", "../../servers/challenge3-mcp", "start")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()
-    .PublishAsDockerFile();
+    .WithEnvironment("NODE_ENV", builder.ExecutionContext.IsPublishMode ? "production" : "development")
+    .PublishAsDockerFile()
+    .PublishAsAzureContainerApp((infra, app) => ScaleToZero(app));
 
-var search = builder.AddNpmApp("challenge3-search", "../../servers/challenge3-search")
+var search = builder.AddNpmApp("challenge3-search", "../../servers/challenge3-search", "start")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()
-    .PublishAsDockerFile();
+    .WithEnvironment("NODE_ENV", builder.ExecutionContext.IsPublishMode ? "production" : "development")
+    .PublishAsDockerFile()
+    .PublishAsAzureContainerApp((infra, app) => ScaleToZero(app));
 
 // --- glue: the well-known catalog + MCP cards, generated from the resolved MCP endpoints ---
 // In Azure this is the public entry point: bind your custom domain to THIS container app so
@@ -49,7 +69,8 @@ var artifacts = builder.AddProject<Projects.Ard_Artifacts>("artifacts")
     .WithEnvironment("C2_BASE", c2.GetEndpoint("http"))
     .WithEnvironment("C3_BASE", c3.GetEndpoint("http"))
     .WithHttpHealthCheck("/healthz")
-    .WithExternalHttpEndpoints();
+    .WithExternalHttpEndpoints()
+    .PublishAsAzureContainerApp((infra, app) => ScaleToZero(app));
 
 // the search service returns OUR challenge-3 card URL (its one env-overridable value)
 search.WithEnvironment("CARD3_URL", ReferenceExpression.Create($"{artifacts.GetEndpoint("http")}/cards/challenge3.mcp.json"));
