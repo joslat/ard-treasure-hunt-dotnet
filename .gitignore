@@ -24,5 +24,9 @@ src/Ard.AppHost/infra/
 /artifacts/run/*
 !/artifacts/run/award.png
 
+# Committed offline fallback lives in artifacts/captured/ — keep only award.html there
+/artifacts/captured/*
+!/artifacts/captured/award.html
+
 # Default walker / award output (hunt-report.json + award.html, created by `dotnet run`)
 ard-output/

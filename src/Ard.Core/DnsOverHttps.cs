@@ -76,6 +76,11 @@ public sealed class DnsOverHttps
                 resp.EnsureSuccessStatusCode();
                 var doh = await resp.Content.ReadFromJsonAsync<DohResponse>(Json.Default, ct);
                 if (doh is null) continue;
+                // Status is the DNS RCODE: 0 = NOERROR, 3 = NXDOMAIN (authoritative "no such name").
+                // Any other non-zero status (e.g. 2 = SERVFAIL) is a soft/transient failure at this
+                // resolver — fail over to the next one instead of reporting an empty answer set.
+                const int NoError = 0, NxDomain = 3;
+                if (doh.Status != NoError && doh.Status != NxDomain) continue;
                 return doh.Answer ?? new List<DohAnswer>();
             }
             catch (Exception ex)

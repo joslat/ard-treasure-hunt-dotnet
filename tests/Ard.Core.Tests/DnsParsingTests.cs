@@ -15,10 +15,12 @@ public class DnsParsingTests
         => Assert.Equal(expected, DnsOverHttps.Unquote(input));
 
     [Theory]
-    [InlineData(443, "host.example.net.", "https://host.example.net")]        // default https port dropped + trailing dot trimmed
-    [InlineData(8443, "host.example.net.", "https://host.example.net:8443")]  // non-standard port preserved
-    public void SrvRecord_ToBaseUrl_DropsDefaultPortAndTrailingDot(int port, string target, string expected)
-        => Assert.Equal(expected, new SrvRecord(0, 0, port, target).ToBaseUrl());
+    [InlineData("https", 443, "host.example.net.", "https://host.example.net")]        // default https port dropped + trailing dot trimmed
+    [InlineData("https", 8443, "host.example.net.", "https://host.example.net:8443")]  // non-standard port preserved
+    [InlineData("http", 80, "host.example.net.", "http://host.example.net")]           // http: default port (80) dropped
+    [InlineData("http", 8080, "host.example.net.", "http://host.example.net:8080")]    // http: non-default port preserved (local self-host)
+    public void SrvRecord_ToBaseUrl_DropsDefaultPortAndTrailingDot(string scheme, int port, string target, string expected)
+        => Assert.Equal(expected, new SrvRecord(0, 0, port, target).ToBaseUrl(scheme));
 
     [Fact]
     public void SrvRecord_ToString_IsWireFormat()

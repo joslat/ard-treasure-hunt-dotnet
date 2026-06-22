@@ -113,7 +113,7 @@ The capstone. It renders challenge 3 as a **real MCP App** and captures it. This
 | File | Responsibility |
 |------|----------------|
 | `Program.cs` | Entry point. Parses options, attaches the parent console (so headless logs show), runs WinForms. |
-| `AwardOptions.cs` | CLI options: `--screenshot`, `--name`, `--endpoint`, `--walk`, `--html`, `--width/--height`, `--scale`. |
+| `AwardOptions.cs` | CLI options: `--screenshot`, `--name`, `--domain`, `--endpoint`, `--walk`, `--html`, `--width/--height`, `--scale`. |
 | `AwardSource.cs` | **Acquires** the award (`AwardArtifact`) by the chosen strategy — local file, direct endpoint, or full ARD discovery — with an offline fallback to a captured copy. |
 | `AwardHostHtml.cs` | Builds the two documents the WebView renders: the **award** (with a name-prefill script injected) and the **host wrapper** that runs the MCP Apps host side. |
 | `AwardForm.cs` | The WebView2 host: temp-folder virtual-host mapping, the lifecycle wiring, and the **DevTools `Page.captureScreenshot`** that crops to the card and writes the PNG. |

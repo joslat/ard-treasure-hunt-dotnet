@@ -27,6 +27,24 @@ public class ArdResolverTests
     }
 
     [Fact]
+    public async Task ResolveWellKnownAsync_HonoursHttpScheme_ForSelfHostedHunt()
+    {
+        // Arrange
+        var handler = MockHttp.Handler((req, _) =>
+            MockHttp.Json("""{"specVersion":"0.9","entries":[{"identifier":"urn:ai:x","type":"application/mcp-server+json","url":"http://x/card.json"}]}"""));
+        var resolver = new ArdResolver(handler.Client(), scheme: "http");
+
+        // Act
+        await resolver.ResolveWellKnownAsync("example.com");
+
+        // Assert — the local-mode http scheme builds an http:// well-known URL.
+        handler.Protected().Verify("SendAsync", Times.Once(),
+            ItExpr.Is<HttpRequestMessage>(r =>
+                r.RequestUri!.ToString() == "http://example.com/.well-known/ai-catalog.json"),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
     public async Task FetchCardAsync_ParsesEndpointAndTools()
     {
         // Arrange

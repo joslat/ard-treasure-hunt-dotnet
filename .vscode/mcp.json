@@ -1,4 +1,5 @@
 {
+  "$schema": "https://modelcontextprotocol.io/schemas/draft/2025-06-18/mcp.json",
   "servers": {
     "ardChallengeOne": {
       "type": "http",

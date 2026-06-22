@@ -206,11 +206,11 @@ async Task AwardAsync()
     var outDir = ResolveOutDir(Option("--out") ?? "ard-output");
     var endpoint = Option("--endpoint");
 
-    var resolver = new ArdResolver(http);
     var runner = new HuntRunner(http, Console.WriteLine);
 
     if (endpoint is null)
     {
+        var resolver = new ArdResolver(http);
         Banner($"Discovering the challenge-3 MCP App via ARD ({domain})");
         var (search, _, registry) = await resolver.ResolveDnsRegistryAsync(domain, "treasure hunt challenge");
         Console.WriteLine($"  SRV → registry {registry}");
