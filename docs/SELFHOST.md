@@ -70,7 +70,7 @@ resolves. A small [`infra/dns.bicep`](../infra/dns.bicep) provisions the **Azure
 ```
 
 ### Prerequisites
-- [`azd`](https://aka.ms/azd) + [`az`](https://aka.ms/azcli) + a **running Docker daemon** (the servers ship via `.PublishAsDockerFile()`, so `azd up` builds their images locally), and an Azure subscription.
+- The [**.NET 10 SDK**](https://dotnet.microsoft.com/download) (`azd up` runs `dotnet` locally to generate the Aspire manifest and publish the `Ard.Artifacts` image), [`azd`](https://aka.ms/azd) + [`az`](https://aka.ms/azcli) + a **running Docker daemon** (the TS servers ship via `.PublishAsDockerFile()`, so `azd up` builds their images locally), and an Azure subscription.
 - **A domain you own** (or a subdomain, e.g. `hunt.example.com`) that you can **delegate to Azure DNS**.
   This is the one step no IaC can do for you — your registrar controls the NS records.
 

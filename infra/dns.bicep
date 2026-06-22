@@ -101,7 +101,7 @@ resource artifactsApexA 'Microsoft.Network/dnsZones/A@2018-05-01' = if (isApex) 
   properties: {
     TTL: 3600
     ARecords: [
-      { ipv4Address: empty(envStaticIp) ? fail('Apex hunts (hostLabel "@") require envStaticIp — pass `az containerapp env show --query properties.staticIp`.') : envStaticIp }
+      { ipv4Address: isApex && empty(envStaticIp) ? fail('Apex hunts (hostLabel "@") require envStaticIp — pass `az containerapp env show --query properties.staticIp`.') : envStaticIp }
     ]
   }
 }

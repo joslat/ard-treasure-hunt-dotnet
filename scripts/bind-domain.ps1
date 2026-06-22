@@ -52,9 +52,19 @@ if (-not $already) {
     az containerapp hostname add -g $rg -n $artifactsName --hostname $hunt | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "hostname add failed ($LASTEXITCODE)." }
 }
-Write-Host "Binding $hunt + provisioning the free managed cert (this can take several minutes) ..." -ForegroundColor Cyan
-az containerapp hostname bind -g $rg -n $artifactsName --hostname $hunt --environment $envResName --validation-method $validation | Out-Null
-if ($LASTEXITCODE -ne 0) { throw "hostname bind failed ($LASTEXITCODE)." }
+$binding = az containerapp hostname list -g $rg -n $artifactsName --query "[?name=='$hunt'].bindingType | [0]" -o tsv
+if ($binding -eq "SniEnabled") {
+    Write-Host "$hunt is already Secured (SniEnabled); skipping bind." -ForegroundColor Cyan
+} else {
+    Write-Host "Binding $hunt + provisioning the free managed cert (this can take several minutes) ..." -ForegroundColor Cyan
+    $bindOut = az containerapp hostname bind -g $rg -n $artifactsName --hostname $hunt --environment $envResName --validation-method $validation 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        # Non-fatal if a binding row already exists (already bound / mid-issuance) so a re-run converges.
+        $existing = az containerapp hostname list -g $rg -n $artifactsName --query "[?name=='$hunt'].name | [0]" -o tsv
+        if (-not $existing) { throw "hostname bind failed ($LASTEXITCODE): $bindOut" }
+        Write-Warning "hostname bind returned $LASTEXITCODE but a binding for $hunt already exists; continuing to poll. ($bindOut)"
+    }
+}
 
 # Poll until the binding reports secured (SniEnabled).
 $secured = $false
