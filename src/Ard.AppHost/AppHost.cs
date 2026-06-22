@@ -17,28 +17,28 @@ if (builder.ExecutionContext.IsPublishMode)
     builder.AddAzureContainerAppEnvironment("aca-env").WithAzdResourceNaming();
 
 // --- Andreas's vendored TS servers (npm locally; containerized for Azure) ---
-var c1 = builder.AddNpmApp("challenge1-mcp", "../../servers/challenge1-mcp")
+var c1 = builder.AddJavaScriptApp("challenge1-mcp", "../../servers/challenge1-mcp")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()
     .WithEnvironment("NODE_ENV", builder.ExecutionContext.IsPublishMode ? "production" : "development")
     .PublishAsDockerFile();
 
-var c2 = builder.AddNpmApp("challenge2-mcp", "../../servers/challenge2-mcp")
+var c2 = builder.AddJavaScriptApp("challenge2-mcp", "../../servers/challenge2-mcp")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()
     .WithEnvironment("NODE_ENV", builder.ExecutionContext.IsPublishMode ? "production" : "development")
     .PublishAsDockerFile();
 
-var c3 = builder.AddNpmApp("challenge3-mcp", "../../servers/challenge3-mcp")
+var c3 = builder.AddJavaScriptApp("challenge3-mcp", "../../servers/challenge3-mcp")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()
     .WithEnvironment("NODE_ENV", builder.ExecutionContext.IsPublishMode ? "production" : "development")
     .PublishAsDockerFile();
 
-var search = builder.AddNpmApp("challenge3-search", "../../servers/challenge3-search")
+var search = builder.AddJavaScriptApp("challenge3-search", "../../servers/challenge3-search")
     .WithHttpEndpoint(env: "PORT")
     .WithHttpHealthCheck("/healthz")
     .WithExternalHttpEndpoints()

@@ -17,7 +17,8 @@ param(
     [string]$EnvName   = "ard-hunt"               # azd environment name (created if it doesn't exist)
 )
 $ErrorActionPreference = "Stop"
-$PSNativeCommandUseErrorActionPreference = $true   # native (azd/az) non-zero exit codes throw (PS 7.3+; the explicit $LASTEXITCODE guards cover PS 5.1)
+# Native (azd/az) calls don't auto-throw on a non-zero exit, so each critical one below is followed by an
+# explicit $LASTEXITCODE guard with a friendly message — identical behavior on Windows PowerShell 5.1 and 7+.
 
 # Anchor to the repo root so relative paths (infra/dns.bicep, azure.yaml) resolve from any cwd.
 Set-Location (Split-Path -Parent $PSScriptRoot)
@@ -30,10 +31,9 @@ docker info *> $null
 if ($LASTEXITCODE -ne 0) { throw "The Docker daemon is not running — azd needs it to build the server container images." }
 
 # 1) Ensure an azd environment exists before setting values on it, then provision + deploy from zero.
-# `azd env list` exits non-zero on a fresh clone (no .azure state); disable native-error promotion just here
-# so that expected exit code doesn't throw under $PSNativeCommandUseErrorActionPreference — we WANT to fall
-# through to `azd env new` in that case.
-$existing = & { $PSNativeCommandUseErrorActionPreference = $false; azd env list --output json 2>$null } | ConvertFrom-Json
+# `azd env list` exits non-zero on a fresh clone (no .azure state) — that's expected; ConvertFrom-Json then
+# yields $null and we fall through to `azd env new`.
+$existing = azd env list --output json 2>$null | ConvertFrom-Json
 if (-not ($existing | Where-Object { $_.Name -eq $EnvName })) {
     azd env new $EnvName --location $Location | Out-Null   # prompts for a subscription if none is set
     if ($LASTEXITCODE -ne 0) { throw "azd env new failed ($LASTEXITCODE)." }
@@ -83,6 +83,7 @@ if ($HostLabel -eq "@") {
 az deployment group create -g $rg -f infra/dns.bicep `
     -p zoneName=$ZoneName hostLabel=$HostLabel searchFqdn=$searchFqdn artifactsFqdn=$artifactsFqdn `
        artifactsCustomDomainVerificationId=$verifyId envStaticIp=$envStaticIp | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "DNS deployment (infra/dns.bicep) failed ($LASTEXITCODE)." }
 
 $ns          = az network dns zone show -g $rg -n $ZoneName --query "nameServers" -o tsv
 $hunt        = if ($HostLabel -eq "@") { $ZoneName } else { "$HostLabel.$ZoneName" }

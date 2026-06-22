@@ -12,7 +12,8 @@ param(
     [string]$EnvName   = "ard-hunt"
 )
 $ErrorActionPreference = "Stop"
-$PSNativeCommandUseErrorActionPreference = $true
+# Native (azd/az) calls don't auto-throw on non-zero exit; the mutating ones below carry explicit
+# $LASTEXITCODE guards (consistent on Windows PowerShell 5.1 and 7+).
 Set-Location (Split-Path -Parent $PSScriptRoot)
 
 azd env select $EnvName | Out-Null
@@ -49,9 +50,11 @@ $already = az containerapp hostname list -g $rg -n $artifactsName --query "[?nam
 if (-not $already) {
     Write-Host "Adding hostname $hunt to $artifactsName ..." -ForegroundColor Cyan
     az containerapp hostname add -g $rg -n $artifactsName --hostname $hunt | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "hostname add failed ($LASTEXITCODE)." }
 }
 Write-Host "Binding $hunt + provisioning the free managed cert (this can take several minutes) ..." -ForegroundColor Cyan
 az containerapp hostname bind -g $rg -n $artifactsName --hostname $hunt --environment $envResName --validation-method $validation | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "hostname bind failed ($LASTEXITCODE)." }
 
 # Poll until the binding reports secured (SniEnabled).
 $secured = $false
