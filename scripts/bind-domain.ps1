@@ -17,6 +17,7 @@ $ErrorActionPreference = "Stop"
 Set-Location (Split-Path -Parent $PSScriptRoot)
 
 azd env select $EnvName | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "azd env select failed ($LASTEXITCODE)." }
 $vals = azd env get-values
 function Get-EnvVal([string]$key) { (($vals | Select-String "^$key=").Line -replace "^$key=", '').Trim('"') }
 $rg = Get-EnvVal 'AZURE_RESOURCE_GROUP'
@@ -43,6 +44,9 @@ catch { throw "asuid TXT for '$asuid' does not resolve yet. Delegate $ZoneName t
 if ($HostLabel -ne "@") {
     try { Resolve-DnsName -Name $hunt -Type CNAME -ErrorAction Stop | Out-Null }
     catch { throw "CNAME for '$hunt' does not resolve yet. Wait for delegation/propagation before binding. If you already created the records, your local resolver may be negative-caching a prior NXDOMAIN: run 'ipconfig /flushdns' (or query an authoritative server) and retry." }
+} else {
+    try { Resolve-DnsName -Name $hunt -Type A -ErrorAction Stop | Out-Null }
+    catch { throw "A record for apex '$hunt' does not resolve yet. The HTTP-validated apex bind needs the apex A record (the Container Apps environment static IP) to resolve publicly. Wait for delegation/propagation, or run 'ipconfig /flushdns' if a prior NXDOMAIN is negative-cached, then retry." }
 }
 
 # Idempotent: only add the hostname if it isn't already bound.

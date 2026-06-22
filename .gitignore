@@ -12,11 +12,13 @@ packages/
 node_modules/
 dist/
 
-# Aspire / azd
+# Aspire / azd — azd generates compute infra into infra/ and src/Ard.AppHost/infra/ on `azd up`;
+# keep only our hand-authored infra/dns.bicep.
 .azure/
 src/Ard.AppHost/infra/
 **/aspire-manifest.json
-infra/*.json
+/infra/*
+!/infra/dns.bicep
 
 # Committed showcase image lives in artifacts/run/ — keep only award.png there
 /artifacts/run/*

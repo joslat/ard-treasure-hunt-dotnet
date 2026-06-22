@@ -31,15 +31,17 @@ docker info *> $null
 if ($LASTEXITCODE -ne 0) { throw "The Docker daemon is not running — azd needs it to build the server container images." }
 
 # 1) Ensure an azd environment exists before setting values on it, then provision + deploy from zero.
-# `azd env list` exits non-zero on a fresh clone (no .azure state) — that's expected; ConvertFrom-Json then
-# yields $null and we fall through to `azd env new`.
-$existing = azd env list --output json 2>$null | ConvertFrom-Json
+# `azd env list` exits non-zero on a fresh clone (no .azure state) — that's expected. Tolerate any
+# non-JSON/empty output by defaulting to $null so we fall through to `azd env new`.
+$existing = try { azd env list --output json 2>$null | ConvertFrom-Json } catch { $null }
 if (-not ($existing | Where-Object { $_.Name -eq $EnvName })) {
     azd env new $EnvName --location $Location | Out-Null   # prompts for a subscription if none is set
     if ($LASTEXITCODE -ne 0) { throw "azd env new failed ($LASTEXITCODE)." }
 }
 azd env select $EnvName | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "azd env select failed ($LASTEXITCODE)." }
 azd env set AZURE_LOCATION $Location | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "azd env set AZURE_LOCATION failed ($LASTEXITCODE)." }
 azd up -e $EnvName
 if ($LASTEXITCODE -ne 0) { throw "azd up failed ($LASTEXITCODE)." }
 
