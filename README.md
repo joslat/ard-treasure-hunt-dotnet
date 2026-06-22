@@ -150,7 +150,7 @@ It locks down the fiddly parts: **SSE event-boundary reassembly**, TXT unquoting
 dotnet run --project src/Ard.Walker
 
 # 2. Render the trophy for your name and save a PNG
-dotnet run --project src/Ard.AwardApp -- --screenshot ard-output/award.png --name "José Luis Latorre"
+dotnet run --project src/Ard.AwardApp -- --screenshot ard-output/award.png --name "your name?"
 
 # 3. Open the interactive award window
 dotnet run --project src/Ard.AwardApp

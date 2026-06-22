@@ -6,6 +6,10 @@ This repo is a **.NET / C# solution and teaching kit** built around Andreas Adne
 
 ---
 
+## The hunt
+
+- **Andreas Adner** (Microsoft MVP) — blog <https://nullpointer.se/>. The treasure hunt, the three hidden MCP servers, and the award MCP App are his work; this repository is an independent .NET study/solution + workshop built around it.
+
 ## ARD — Agentic Resource Discovery
 
 - Spec (v0.9 draft): <https://agenticresourcediscovery.org/spec/>
@@ -36,7 +40,3 @@ This repo is a **.NET / C# solution and teaching kit** built around Andreas Adne
 - WebView2 — `CallDevToolsProtocolMethodAsync`: <https://learn.microsoft.com/dotnet/api/microsoft.web.webview2.core.corewebview2.calldevtoolsprotocolmethodasync>
 - Chrome DevTools Protocol — `Page.captureScreenshot`: <https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-captureScreenshot>
 - `ModelContextProtocol` C# SDK (alternative to the thin client here): <https://github.com/modelcontextprotocol/csharp-sdk>
-
-## The hunt
-
-- **Andreas Adner** (Microsoft MVP) — blog <https://nullpointer.se/>. The treasure hunt, the three hidden MCP servers, and the award MCP App are his work; this repository is an independent .NET study/solution + workshop built around it.

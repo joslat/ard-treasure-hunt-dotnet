@@ -12,7 +12,7 @@ using Ard.Core;
 //   award  [--domain d] [--endpoint u] [--out dir]   Fetch + save the challenge-3 MCP App award HTML.
 
 const string DefaultDomain = "nullpointer.se";
-const string DefaultName = "José Luis Latorre";
+const string DefaultName = "your name?";
 
 Console.OutputEncoding = Encoding.UTF8;
 

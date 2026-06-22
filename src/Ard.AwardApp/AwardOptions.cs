@@ -3,7 +3,7 @@ namespace Ard.AwardApp;
 /// <summary>Command-line options for the award renderer.</summary>
 public sealed class AwardOptions
 {
-    public const string DefaultName = "José Luis Latorre";
+    public const string DefaultName = "your name?";
     public const string DefaultDomain = "nullpointer.se";
 
     /// <summary>When set, render headlessly, save a PNG here, and exit.</summary>
@@ -55,7 +55,7 @@ public sealed class AwardOptions
 
           (no args)                 Open the interactive window (discovers the award via ARD).
           --screenshot <file.png>   Render headlessly, save a PNG, and exit.
-          --name <name>             Name shown on the award (default: José Luis Latorre).
+          --name <name>             Name shown on the award (default: your name?).
           --endpoint <url>          Connect directly to this MCP endpoint.
           --walk                    Discover by walking the whole ARD trail.
           --html <file>             Render a local award HTML file (offline).
@@ -65,7 +65,7 @@ public sealed class AwardOptions
 
         Examples
           dotnet run --project src/Ard.AwardApp
-          dotnet run --project src/Ard.AwardApp -- --screenshot ard-output/award.png --name "José Luis Latorre"
+          dotnet run --project src/Ard.AwardApp -- --screenshot ard-output/award.png --name "your name?"
           dotnet run --project src/Ard.AwardApp -- --html artifacts/captured/award.html --screenshot ard-output/award.png
         """;
 }
