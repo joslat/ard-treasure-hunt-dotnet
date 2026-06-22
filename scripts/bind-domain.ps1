@@ -39,14 +39,23 @@ $validation = if ($HostLabel -eq "@") { "HTTP" } else { "CNAME" }
 $asuid      = if ($HostLabel -eq "@") { "asuid.$ZoneName" } else { "asuid.$hunt" }
 
 # Verify DNS is live before binding (bind fails until the records resolve publicly + delegation propagated).
-try { if (-not (Resolve-DnsName -Name $asuid -Type TXT -ErrorAction Stop)) { throw } }
-catch { throw "asuid TXT for '$asuid' does not resolve yet. Delegate $ZoneName to the Azure name servers and wait for propagation before binding. If you already created the records, your local resolver may be negative-caching a prior NXDOMAIN: run 'ipconfig /flushdns' (or query an authoritative server) and retry." }
+# Resolve-DnsName is Windows-only (DnsClient module); on pwsh for Linux/macOS fall back to nslookup so the
+# preflight doesn't mis-report "DNS not live" via a CommandNotFoundException.
+$haveResolve = [bool](Get-Command Resolve-DnsName -ErrorAction SilentlyContinue)
+function Test-DnsRecord([string]$name, [string]$type) {
+    if ($haveResolve) {
+        try { return [bool](Resolve-DnsName -Name $name -Type $type -ErrorAction Stop) } catch { return $false }
+    }
+    $out = (& nslookup -type=$type $name 2>$null) -join "`n"
+    if ($type -eq 'TXT')   { return [bool]($out -match '(?i)text\s*=') }
+    if ($type -eq 'CNAME') { return [bool]($out -match '(?i)canonical name\s*=') }
+    return [bool]($out -match '(?i)(^|\n)\s*Address(es)?\s*:')
+}
+if (-not (Test-DnsRecord $asuid 'TXT')) { throw "asuid TXT for '$asuid' does not resolve yet. Delegate $ZoneName to the Azure name servers and wait for propagation before binding. If you already created the records, your local resolver may be negative-caching a prior NXDOMAIN: run 'ipconfig /flushdns' (or query an authoritative server) and retry." }
 if ($HostLabel -ne "@") {
-    try { Resolve-DnsName -Name $hunt -Type CNAME -ErrorAction Stop | Out-Null }
-    catch { throw "CNAME for '$hunt' does not resolve yet. Wait for delegation/propagation before binding. If you already created the records, your local resolver may be negative-caching a prior NXDOMAIN: run 'ipconfig /flushdns' (or query an authoritative server) and retry." }
+    if (-not (Test-DnsRecord $hunt 'CNAME')) { throw "CNAME for '$hunt' does not resolve yet. Wait for delegation/propagation before binding. If you already created the records, your local resolver may be negative-caching a prior NXDOMAIN: run 'ipconfig /flushdns' (or query an authoritative server) and retry." }
 } else {
-    try { Resolve-DnsName -Name $hunt -Type A -ErrorAction Stop | Out-Null }
-    catch { throw "A record for apex '$hunt' does not resolve yet. The HTTP-validated apex bind needs the apex A record (the Container Apps environment static IP) to resolve publicly. Wait for delegation/propagation, or run 'ipconfig /flushdns' if a prior NXDOMAIN is negative-cached, then retry." }
+    if (-not (Test-DnsRecord $hunt 'A')) { throw "A record for apex '$hunt' does not resolve yet. The HTTP-validated apex bind needs the apex A record (the Container Apps environment static IP) to resolve publicly. Wait for delegation/propagation, or run 'ipconfig /flushdns' if a prior NXDOMAIN is negative-cached, then retry." }
 }
 
 # Idempotent: only add the hostname if it isn't already bound.
@@ -63,10 +72,14 @@ if ($binding -eq "SniEnabled") {
     Write-Host "Binding $hunt + provisioning the free managed cert (this can take several minutes) ..." -ForegroundColor Cyan
     $bindOut = az containerapp hostname bind -g $rg -n $artifactsName --hostname $hunt --environment $envResName --validation-method $validation 2>&1
     if ($LASTEXITCODE -ne 0) {
-        # Non-fatal if a binding row already exists (already bound / mid-issuance) so a re-run converges.
-        $existing = az containerapp hostname list -g $rg -n $artifactsName --query "[?name=='$hunt'].name | [0]" -o tsv
-        if (-not $existing) { throw "hostname bind failed ($LASTEXITCODE): $bindOut" }
-        Write-Warning "hostname bind returned $LASTEXITCODE but a binding for $hunt already exists; continuing to poll. ($bindOut)"
+        # The 'hostname add' above always pre-creates the custom-domain row, so mere row presence can't tell a
+        # genuine bind failure from an idempotent re-run. Treat non-zero as FATAL unless the binding is already
+        # secured/in-progress (bindingType SniEnabled) or the CLI reports an idempotent already-exists/conflict.
+        $bt = az containerapp hostname list -g $rg -n $artifactsName --query "[?name=='$hunt'].bindingType | [0]" -o tsv
+        if ($bt -ne "SniEnabled" -and "$bindOut" -notmatch 'already|conflict|exists') {
+            throw "hostname bind failed ($LASTEXITCODE): $bindOut"
+        }
+        Write-Warning "hostname bind returned $LASTEXITCODE but $hunt appears already bound / mid-issuance (bindingType '$bt'); continuing to poll. ($bindOut)"
     }
 }
 
