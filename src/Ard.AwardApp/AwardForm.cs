@@ -236,8 +236,11 @@ public sealed class AwardForm : Form
         else _status.Text = msg;
     }
 
-    private static string SafeFileName(string s) =>
-        string.Concat(s.Split(Path.GetInvalidFileNameChars())).Replace(' ', '-');
+    private static string SafeFileName(string s)
+    {
+        var stem = string.Concat(s.Split(Path.GetInvalidFileNameChars())).Replace(' ', '-');
+        return stem.Length > 0 ? stem : "award";
+    }
 
     protected override void Dispose(bool disposing)
     {

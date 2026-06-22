@@ -15,15 +15,17 @@ app.MapGet("/resolve", (string? name, int type) =>
 {
     if (type == TypeTxt)
     {
-        var catalogUrl = Environment.GetEnvironmentVariable("CATALOG2_URL") ?? "";
-        return Doh(name, TypeTxt, $"url={catalogUrl}");
+        var catalogUrl = Environment.GetEnvironmentVariable("CATALOG2_URL");
+        return string.IsNullOrEmpty(catalogUrl) ? Empty() : Doh(name, TypeTxt, $"url={catalogUrl}");
     }
     if (type == TypeSrv)
     {
-        var search = new Uri(Environment.GetEnvironmentVariable("SEARCH_URL") ?? "http://localhost:80");
+        var searchUrl = Environment.GetEnvironmentVariable("SEARCH_URL");
+        if (string.IsNullOrEmpty(searchUrl)) return Empty();   // no bogus localhost:80 fallback that masks a missing wiring
+        var search = new Uri(searchUrl);
         return Doh(name, TypeSrv, $"0 0 {search.Port} {search.Host}.");
     }
-    return Results.Json(new { Status = 0, Answer = Array.Empty<object>() });
+    return Empty();
 });
 
 app.MapGet("/healthz", () => "ok");
@@ -34,3 +36,5 @@ static IResult Doh(string? name, int type, string data) => Results.Json(new
     Status = 0,
     Answer = new[] { new { name = name ?? "", type, TTL = 60, data } },
 });
+
+static IResult Empty() => Results.Json(new { Status = 0, Answer = Array.Empty<object>() });

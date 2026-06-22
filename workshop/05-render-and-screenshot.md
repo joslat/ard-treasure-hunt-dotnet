@@ -78,10 +78,10 @@ WebView2 is Chromium under the hood, so we drive it with the same **Chrome DevTo
 ## ✅ Checkpoint
 
 ```powershell
-dotnet run --project src/Ard.AwardApp -- --screenshot ard-output/award.png --name "Your Name"
+dotnet run --project src/Ard.AwardApp -- --screenshot ard-output/award.png --name "your name?"
 ```
 
-Open `award.png`: a **dark card, gold trophy, gold headline, your name, code `1337 h4x0r`, and "Nice work, Your Name! 🎉"**. 🏆
+Open `award.png`: a **dark card, gold trophy, gold headline, your name, code `1337 h4x0r`, and "Nice work, your name?! 🎉"**. 🏆
 
 Then run it **without** `--screenshot` for the interactive window — change the name, hit *Reveal / Reload*, *Save PNG…*.
 
