@@ -83,6 +83,12 @@ The script runs `azd up` (which creates the resource group, Container Apps envir
 5 container apps from zero), provisions `infra/dns.bicep` (the DNS zone + records), then prints the **four
 Azure name servers** to set at your registrar.
 
+> **First run prompts for a subscription.** The script creates a fresh azd environment (`azd env new`
+> without `--subscription`), so on the first interactive run azd asks you to pick the target subscription
+> and confirm the location. With multiple subscriptions, pre-select one first —
+> `az account set --subscription <id>` then `azd config set defaults.subscription <id>` — and note that a
+> non-interactive / CI run would otherwise hang on this prompt.
+
 Then — the **one human step** — delegate `example.com` to those name servers at your registrar. Once
 delegation has propagated and the records resolve, run the **second script** to bind the custom domain +
 free managed cert (it polls until the binding is secured):
