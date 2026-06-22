@@ -1,27 +1,17 @@
 NOTICE
 ======
 
-This repository includes third-party code.
+Licensing Notice
+----------------
 
-servers/ — ARD Treasure Hunt MCP servers (© Andreas Adner)
-----------------------------------------------------------
-The four services under `servers/` — `challenge1-mcp`, `challenge2-mcp`,
-`challenge3-mcp`, and `challenge3-search` — are the work of **Andreas Adner**
-(https://nullpointer.se/), vendored from his public Agentic Resource Discovery
-treasure-hunt repository so this .NET toolkit can stand up a *self-hosted* hunt
-(locally via .NET Aspire, and on Azure via IaC).
+This repository contains the ARD Treasure Hunt .NET Toolkit, associated
+workshop materials, infrastructure, supporting services, and MCP server
+components.
 
-They remain Andreas's work and are included here with attribution. The only change
-from the originals is a single, clearly-commented env-overridable constant in
-`servers/challenge3-search/src/index.ts` (`CARD3_URL`), so the search service can
-point at your own infrastructure instead of the original Azure host. Everything else
-is byte-for-byte as published.
+The original ARD treasure hunt was created by
+[Andreas Adner](https://www.linkedin.com/in/andreasadner). Andreas Adner has
+waived all rights, title, and interest he may have in this work and has
+authorized its release under the MIT License.
 
-Andreas's repository did not carry an explicit license at the time of vendoring. This
-copy exists to power the self-hosting feature with full credit to the author. If you
-fork or redistribute these servers, please keep this attribution and check reuse terms
-with Andreas.
-
-The rest of this repository (the `src/Ard.*` .NET projects, the workshop, the IaC, and
-the glue services `Ard.AppHost` / `Ard.Artifacts` / `Ard.MockDoH`) is the work of this
-project's authors.
+Unless otherwise expressly stated in a file, the contents of this repository
+are released under the MIT License. See `LICENSE` for the full license text.
