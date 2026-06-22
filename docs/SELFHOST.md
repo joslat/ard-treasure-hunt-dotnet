@@ -87,7 +87,7 @@ Then — the **one human step** — delegate `example.com` to those name servers
 delegation has propagated and the records resolve, run the **second script** to bind the custom domain +
 free managed cert (it polls until the binding is secured):
 ```powershell
-./scripts/bind-domain.ps1 -ZoneName example.com -HostLabel hunt
+./scripts/bind-domain.ps1 -ZoneName example.com -HostLabel hunt -EnvName ard-hunt   # use the same -EnvName you passed to deploy-azure.ps1
 ```
 
 ### Solve your own hunt
@@ -101,8 +101,10 @@ Real `https`, real public DNS-over-HTTPS, real MCP — your infrastructure end t
 > the public DoH resolvers a few minutes to pick them up before the first walk.
 
 ### Cost & teardown
-The container apps are configured to **scale to zero** (`minReplicas: 0`), so they're **~$0 when idle** (the first request after idle cold-starts in a few seconds); the Azure DNS zone is ~$0.50/mo. Tear everything down — delete the DNS zone first, since `azd down` removes the whole resource group it lives in:
+The container apps are configured to **scale to zero** (`minReplicas: 0`), so they're **~$0 when idle** (the first request after idle cold-starts in a few seconds); the Azure DNS zone is ~$0.50/mo. Tear everything down — `azd down --force --purge` deletes the whole resource group (the DNS zone included), so the explicit zone delete below is optional belt-and-suspenders (e.g. after a partial `azd down`):
 ```powershell
+# <rg> is azd's resource group, rg-<EnvName> (default rg-ard-hunt); deploy-azure.ps1 prints the
+# exact teardown command with <rg> resolved when it finishes.
 az network dns zone delete -g <rg> -n example.com --yes
 azd down --force --purge
 ```

@@ -61,7 +61,7 @@ seed: nullpointer.se
 
 ## The projects, in depth
 
-The toolkit is three projects (the `ARDChallenge.slnx` solution also includes the `tests/` suite and the self-host projects under `selfhost/` — see [`docs/SELFHOST.md`](docs/SELFHOST.md)). The dependency arrow is one-way: both apps depend on the library, the library depends on nothing but the BCL.
+The toolkit is three projects (the `ARDChallenge.slnx` solution also includes the `tests/` suite and the self-host projects grouped under the `selfhost/` solution folder, though they physically live in `src/` — see [`docs/SELFHOST.md`](docs/SELFHOST.md)). The dependency arrow is one-way: both apps depend on the library, the library depends on nothing but the BCL.
 
 ```
             ┌──────────────────────────────────────────────┐
