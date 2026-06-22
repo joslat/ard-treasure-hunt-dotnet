@@ -4,6 +4,8 @@
 
 A **.NET 9 / C#** toolkit that solves [Andreas Adner](https://nullpointer.se/)'s [Agentic Resource Discovery (ARD)](https://agenticresourcediscovery.org/) treasure hunt end-to-end — and a **hands-on workshop** that teaches you to build it yourself, step by step.
 
+Andreas will host the infrastructure for the treasure hunt until 1st of August 2026, and if you complete the challenge before then, drop a comment in [this post](https://www.linkedin.com/posts/andreasadner_agenticresourcediscovery-mcp-aiagents-activity-7474128936793321472-6YU_). If you want to host the treasure hunt yourself, follow the instructions in this repo.
+
 Starting from a single clue — `https://nullpointer.se/.well-known/ai-catalog.json` — the toolkit walks all three ARD discovery mechanisms, connects to each hidden MCP server, collects the completion codes, and renders the final **MCP Apps** trophy as a PNG.
 
 - 🧭 **Want to learn it?** → start the [**workshop**](workshop/README.md). Seven labs, build it yourself with an AI agent, understand every line.
