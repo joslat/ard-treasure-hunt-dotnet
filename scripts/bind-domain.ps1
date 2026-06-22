@@ -38,10 +38,10 @@ $asuid      = if ($HostLabel -eq "@") { "asuid.$ZoneName" } else { "asuid.$hunt"
 
 # Verify DNS is live before binding (bind fails until the records resolve publicly + delegation propagated).
 try { if (-not (Resolve-DnsName -Name $asuid -Type TXT -ErrorAction Stop)) { throw } }
-catch { throw "asuid TXT for '$asuid' does not resolve yet. Delegate $ZoneName to the Azure name servers and wait for propagation before binding." }
+catch { throw "asuid TXT for '$asuid' does not resolve yet. Delegate $ZoneName to the Azure name servers and wait for propagation before binding. If you already created the records, your local resolver may be negative-caching a prior NXDOMAIN: run 'ipconfig /flushdns' (or query an authoritative server) and retry." }
 if ($HostLabel -ne "@") {
     try { Resolve-DnsName -Name $hunt -Type CNAME -ErrorAction Stop | Out-Null }
-    catch { throw "CNAME for '$hunt' does not resolve yet. Wait for delegation/propagation before binding." }
+    catch { throw "CNAME for '$hunt' does not resolve yet. Wait for delegation/propagation before binding. If you already created the records, your local resolver may be negative-caching a prior NXDOMAIN: run 'ipconfig /flushdns' (or query an authoritative server) and retry." }
 }
 
 # Idempotent: only add the hostname if it isn't already bound.
@@ -54,10 +54,14 @@ Write-Host "Binding $hunt + provisioning the free managed cert (this can take se
 az containerapp hostname bind -g $rg -n $artifactsName --hostname $hunt --environment $envResName --validation-method $validation | Out-Null
 
 # Poll until the binding reports secured (SniEnabled).
+$secured = $false
 for ($i = 0; $i -lt 30; $i++) {
     $status = az containerapp hostname list -g $rg -n $artifactsName --query "[?name=='$hunt'].bindingType | [0]" -o tsv
-    if ($status -eq "SniEnabled") { Write-Host "Custom domain $hunt is Secured." -ForegroundColor Green; break }
+    if ($status -eq "SniEnabled") { Write-Host "Custom domain $hunt is Secured." -ForegroundColor Green; $secured = $true; break }
     Start-Sleep -Seconds 20
+}
+if (-not $secured) {
+    Write-Warning "Binding for $hunt is not yet Secured after ~10 min (last bindingType: '$status'). Managed-cert issuance can take longer and can get stuck Pending — re-run this script, or check: az containerapp hostname list -g $rg -n $artifactsName -o table"
 }
 Write-Host ""
 Write-Host "Solve your very own hunt:  dotnet run --project src/Ard.Walker -- --domain $hunt" -ForegroundColor Green

@@ -101,10 +101,10 @@ Real `https`, real public DNS-over-HTTPS, real MCP — your infrastructure end t
 > the public DoH resolvers a few minutes to pick them up before the first walk.
 
 ### Cost & teardown
-Scale-to-zero Container Apps are **~$0 when idle**; the Azure DNS zone is ~$0.50/mo. Tear everything down with:
+Scale-to-zero Container Apps are **~$0 when idle**; the Azure DNS zone is ~$0.50/mo. Tear everything down — delete the DNS zone first, since `azd down` removes the whole resource group it lives in:
 ```powershell
+az network dns zone delete -g <rg> -n example.com --yes
 azd down --force --purge
-az network dns zone delete -g <rg> -n example.com
 ```
 
 ### Honest caveats (the IaC was authored to Azure's documented patterns + validated by `bicep build` / `azd infra generate`, but not live-deployed here)

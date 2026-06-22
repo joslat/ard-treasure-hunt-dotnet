@@ -30,7 +30,10 @@ docker info *> $null
 if ($LASTEXITCODE -ne 0) { throw "The Docker daemon is not running — azd needs it to build the server container images." }
 
 # 1) Ensure an azd environment exists before setting values on it, then provision + deploy from zero.
-$existing = azd env list --output json 2>$null | ConvertFrom-Json
+# `azd env list` exits non-zero on a fresh clone (no .azure state); disable native-error promotion just here
+# so that expected exit code doesn't throw under $PSNativeCommandUseErrorActionPreference — we WANT to fall
+# through to `azd env new` in that case.
+$existing = & { $PSNativeCommandUseErrorActionPreference = $false; azd env list --output json 2>$null } | ConvertFrom-Json
 if (-not ($existing | Where-Object { $_.Name -eq $EnvName })) {
     azd env new $EnvName --location $Location | Out-Null   # prompts for a subscription if none is set
     if ($LASTEXITCODE -ne 0) { throw "azd env new failed ($LASTEXITCODE)." }
@@ -96,4 +99,4 @@ Write-Host ""
 Write-Host "Then solve your very own hunt (real https + public DNS):" -ForegroundColor Green
 Write-Host "    dotnet run --project src/Ard.Walker -- --domain $hunt"
 Write-Host ""
-Write-Host "Tear it all down when done:  azd down --force --purge ; az network dns zone delete -g $rg -n $ZoneName" -ForegroundColor DarkGray
+Write-Host "Tear it all down when done:  az network dns zone delete -g $rg -n $ZoneName --yes ; azd down --force --purge" -ForegroundColor DarkGray
